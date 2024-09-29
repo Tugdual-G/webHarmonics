@@ -1,22 +1,28 @@
+const COMPONENT_SPEEDS = new Map();
+COMPONENT_SPEEDS.set("M2", 28.9841042);// Principal lunar semidiurnal degrees/hour
+COMPONENT_SPEEDS.set("S2", 30.0000000);// Principal solar semidiurnal
+COMPONENT_SPEEDS.set("N2", 28.4397295);// Larger lunar elliptic semidiurnal
+COMPONENT_SPEEDS.set("K1", 15.0410686);// Lunar diurnal
+COMPONENT_SPEEDS.set("O1", 13.9430356); // Lunar diurnal
+COMPONENT_SPEEDS.set("P1", 14.9589314); // Solar diurnal
+COMPONENT_SPEEDS.set("Q1", 13.3986609); // Larger lunar elliptic diurnal
+COMPONENT_SPEEDS.set("K2", 30.0821373); // Lunisolar semidiurnal
+COMPONENT_SPEEDS.set("L2", 29.5284789); // Smaller lunar elliptic semidiurnal
+COMPONENT_SPEEDS.set("T2", 29.9589333); // Smaller solar semidiurnal
+COMPONENT_SPEEDS.set("Mf", 1.0980331); // Lunar fortnightly
+COMPONENT_SPEEDS.set("Mm", 0.5443747);  // Lunar monthly
+COMPONENT_SPEEDS.set("Ssa", 0.0821373); // Solar semiannual
+COMPONENT_SPEEDS.set("Sa", 0.0410686);  // Solar annual
+
+const comp_names = [];
+const pulsations0 = [];
+COMPONENT_SPEEDS.forEach((value, key) => {
+    comp_names.push(key);
+    pulsations0.push(Math.PI * value / 180.0);
+});
 
 Module.onRuntimeInitialized = async () => {
 
-    const pulsations0 = [
-        0.262516,    //
-        0.525032,    //
-        0.515369,    //
-        0.505868,    //
-        0.0191643,   //
-        0.00950113,  //
-        0.496367,    //
-        0.243352,    //
-        0.261083,    //
-        0.233851,    //
-        0.523599,    //
-        0.000716782, //
-        0.00143357,  //
-        0.522882,    //
-    ];
 
     const memory = Module.wasmMemory;
 
@@ -41,37 +47,7 @@ Module.onRuntimeInitialized = async () => {
         return arr;
     }
 
-    function testSum(){
-        let pulsations = createF64Array(pulsations0.length);
-        pulsations.set(pulsations0);
-
-        let amplitudes = createF64Array(amplitudes0.length);
-
-        let phases = createF64Array(phases0.length);
-
-        const n_t = 5000;
-        let h = createF64Array(n_t);
-        let t = createF64Array(n_t);
-        for (let i = 0; i < t.length; ++i){
-            t[i] = i * 0.5;
-        }
-
-        Module._sumHarmonics(t.byteOffset, n_t, pulsations.byteOffset, phases.byteOffset,
-                            amplitudes.byteOffset, 0.0, phases.length, h.byteOffset);
-
-
-        var trace0 = {
-            x: t,
-            y: h,
-            mode: 'lines'
-        };
-
-
-        Plotly.newPlot( "graph", [trace0]);
-
-    }
-
-    const resp = await fetch("95_2024.txt");
+    const resp = await fetch("../data/95_2024.txt");
     if (!resp.ok) {
       throw new Error(`Response status: ${resp.status}`);
     }
@@ -82,16 +58,12 @@ Module.onRuntimeInitialized = async () => {
 
     const n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength,
                      t_ptr.byteOffset, h_ptr.byteOffset);
-    console.log(n_pts);
-    console.log(t_ptr);
-    console.log(h_ptr);
     const t = new Float64Array(memory.buffer, t_ptr[0], n_pts);
     const h = new Float64Array(memory.buffer, h_ptr[0], n_pts);
 
     let h_mean = 0.0;
     h.forEach((x)=> h_mean += x);
     h_mean /= h.length;
-    console.log(h_mean);
     h.map((x)=> x-h_mean);
 
 
@@ -106,6 +78,17 @@ Module.onRuntimeInitialized = async () => {
     Module._getHarmonics(t.byteOffset, h.byteOffset, t.length, pulsations.byteOffset,
                          h_mean, phases.byteOffset, amplitudes.byteOffset, pulsations.length);
 
+
+    let htmlList = "";
+    for (let i = 0; i< comp_names.length; ++i){
+        htmlList += "<tr>\n"
+        htmlList += `<td>  ${comp_names[i]}  </td>\n`;
+        htmlList += `<td>  ${pulsations0[i]}  </td>\n`;
+        htmlList += `<td>  ${amplitudes[i]}  </td>\n`;
+        htmlList += `<td>  ${phases[i]}  </td>\n`;
+        htmlList += "</tr>\n"
+    }
+    document.getElementById('components').innerHTML = htmlList;
 
     const t_fit = createF64Array(t.length * 4);
     const h_fit = createF64Array(t.length * 4);

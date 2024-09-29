@@ -8,3 +8,5 @@ test_wasm/
 *eigen*
 plot
 test
+*.wasm
+harmonic.js
