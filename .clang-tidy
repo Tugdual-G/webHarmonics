@@ -1,0 +1,30 @@
+---
+Checks: "-*,
+        bugprone-*,
+        modernize-*,
+        readability-*,
+        clang-analyzer-*,
+        clang-diagnostic-*,
+        cppcoreguidelines-*,
+        mpi-*,
+        performance-*,
+        -llvmlibc-restrict-system-libc-headers,
+        -readability-identifier-length,
+        -readability-magic-numbers,
+        -cppcoreguidelines-avoid-magic-numbers,
+        -bugprone-easily-swappable-parameters,
+        -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+        -readability-uppercase-literal-suffix,
+        -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+        -cppcoreguidelines-non-private-member-variables-in-classes,
+        -bugprone-implicit-widening-*,
+        -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+"
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+FormatStyle:     none
+...
+
+
+#-bugprone-narrowing-conversions,
+#-cppcoreguidelines-narrowing-conversions,

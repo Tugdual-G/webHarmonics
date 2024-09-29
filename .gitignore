@@ -1,0 +1,10 @@
+data.txt
+data_fit.txt
+data/
+gnuplot-iostream.h
+*.a
+*.o
+test_wasm/
+*eigen*
+plot
+test
