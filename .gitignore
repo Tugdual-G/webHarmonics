@@ -9,4 +9,4 @@ test_wasm/
 plot
 test
 *.wasm
-harmonic.js
+harmonics.js

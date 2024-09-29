@@ -47,7 +47,7 @@ Module.onRuntimeInitialized = async () => {
         return arr;
     }
 
-    const resp = await fetch("../data/95_2024.txt");
+    const resp = await fetch("test_data.txt");
     if (!resp.ok) {
       throw new Error(`Response status: ${resp.status}`);
     }
