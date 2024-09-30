@@ -10,3 +10,4 @@ plot
 test
 *.wasm
 harmonics.js
+export.bash
