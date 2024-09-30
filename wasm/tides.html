@@ -24,8 +24,17 @@
     <div class="content" id="selection">
       <input id="inselec" type="file" />
     </div>
-    <div id="graph" style="width:1200px;height:800px;"></div>
-    <script type="module" src="./main.js"></script>
+    <div id="graph"></div>
+
+    <div class="content">
+      <button id="compBtn">Recompute</button>
+    </div>
+    <div class="content">
+      <label for="t_max">\(t_{min}\)</label>
+      <input id="t_min" class="range" type="text" value="none" />
+      <label for="t_max">\(t_{max}\)</label>
+      <input id="t_max" class="range" type="text" value="2000" />
+    </div>
 
     \begin{equation*}
       \LARGE{
@@ -33,20 +42,14 @@
       }
     \end{equation*}
 
-    <div class="values" id="mean_fit">
-      \( H_{0fit} \approx \)  ---
-    </div>
     <div  class="values" id="mean_data">
-      \( H_{0data} = \)  ---
+      \( \overline{H_{data}} = \)  ---
     </div>
 
     <div class="content">
-      <button id="compBtn">Recompute</button>
-      <button id="textFile">Text Export</button>
+      <button id="textFile">Table Text Export</button>
     </div>
 
-    <div class="content">
-    </div>
     <table>
       <caption>
         Tidal component values
@@ -64,5 +67,6 @@
       </tbody>
     </table>
 
+    <script type="module" src="./main.js"></script>
   </body>
 </html>

@@ -34,7 +34,8 @@ let components = {};
         comp_pul.push(Math.PI * value / 180.0);
         compute_comp.push(true);
     });
-    compute_comp[0] = false;
+    compute_comp[compute_comp.length-1] = false;
+    compute_comp[compute_comp.length-2] = false;
     components.names = comp_names;
     components.pulsations = comp_pul;
     components.compute = compute_comp;
@@ -103,6 +104,41 @@ function fillComponentsString(ampls, phases){
     }
 }
 
+function getRange(x){
+
+    let i_min = 0;
+    let i_max = 0;
+
+    const txt_min = document.getElementById("t_min").value;
+    const txt_max = document.getElementById("t_max").value;
+    let t_min = parseFloat(txt_min);
+    let t_max = parseFloat(txt_max);
+
+    if(!isNaN(t_min)) {
+        while (i_min < x.length && x[i_min] < t_min){
+            ++i_min;
+        }
+    }else{
+        i_min = 0;
+    }
+
+    if (!isNaN(t_max)){
+        i_max = i_min;
+        while (i_max < x.length && x[i_max] < t_max ){
+            ++i_max;
+        }
+    }else{
+        i_max = x.length;
+    }
+
+    if (i_min == i_max){
+        i_min = 0;
+        i_max = x.length;
+    }
+
+    return [i_min, i_max];
+}
+
 Module.onRuntimeInitialized = async () => {
 
 
@@ -149,17 +185,17 @@ Module.onRuntimeInitialized = async () => {
         h = new Float64Array(memory.buffer, h_ptr[0], n_pts);
 
         h_mean = mean(h);
-        h.map((x)=> x-h_mean);
+        // h.map((x)=> x-h_mean);
 
         Module._free(t_ptr.byteOffset);
         Module._free(h_ptr.byteOffset);
 
         const meanDataElement = document.getElementById('mean_data');
-        meanDataElement.innerHTML = meanDataElement.innerHTML.replace("---",`${h_mean}`);
+        meanDataElement.innerHTML = meanDataElement.innerHTML.replace("---",`${h_mean} m`);
 
     }
 
-    async function analyse(){
+    async function analyse(times, heights){
         fetchComponentsSelection();
         getPulsations();
 
@@ -170,10 +206,13 @@ Module.onRuntimeInitialized = async () => {
 
         phases = createF64Array(components.comp_puls.length);
 
-        Module._getHarmonics(t.byteOffset, h.byteOffset, t.length, pulsations.byteOffset,
+        Module._getHarmonics(times.byteOffset, heights.byteOffset, times.length, pulsations.byteOffset,
                             h_mean, phases.byteOffset, amplitudes.byteOffset, pulsations.length);
 
-
+        if (components.compute[0]){
+            amplitudes[0] = h_mean + amplitudes[0]*Math.cos(phases[0]);
+            phases[0] = 0.0;
+        }
         fillComponentsTable(amplitudes, phases);
         fillComponentsString(amplitudes, phases);
 
@@ -189,28 +228,62 @@ Module.onRuntimeInitialized = async () => {
             }
         }
 
+        let mean_plot = h_mean;
+        if (components.compute[0]){
+            mean_plot = 0.0;
+        }
         Module._sumHarmonics(t_fit.byteOffset, t_fit.length, pulsations.byteOffset, phases.byteOffset,
-                            amplitudes.byteOffset, h_mean, phases.length, h_fit.byteOffset);
+                             amplitudes.byteOffset, mean_plot, phases.length, h_fit.byteOffset);
 
 
-        const h_fit_mean = mean(h_fit);
-        const meanFitElement = document.getElementById('mean_fit');
-        meanFitElement.innerHTML = meanFitElement.innerHTML.replace("---",`${h_fit_mean}`);
+        const plot = [];
 
-
-        var trace0 = {
+        const range = getRange(t_fit);
+        plot.push({
             x: t,
             y: h,
             mode: 'lines+markers',
             name: 'data',
-        };
+            line: {
+                color: 'rgb(107, 107, 107)',
+                width: 0.5,
+            }
+        });
 
-        var trace1 = {
-            x: t_fit,
-            y: h_fit,
+        plot.push({
+            x: t_fit.subarray(range[0], range[1]),
+            y: h_fit.subarray(range[0], range[1]),
             mode: 'lines',
             name: 'fit',
-        };
+            line: {
+                color: 'rgb(0, 20, 117)',
+                width: 1.0,
+            }
+        });
+
+        plot.push({
+            x: t_fit.subarray(0, range[0]),
+            y: h_fit.subarray(0, range[0]),
+            mode: 'lines',
+            name: 'extrapolated',
+            line: {
+                color: 'rgb(110, 26, 74)',
+                width: 1.0,
+            }
+        });
+
+        plot.push({
+            x: t_fit.subarray(range[1], t_fit.length),
+            y: h_fit.subarray(range[1], t_fit.length),
+            mode: 'lines',
+            name: 'extrapolated',
+            line: {
+                color: 'rgb(110, 26, 74)',
+                width: 1.0,
+            }
+        });
+
+
 
         var layout = {
             title: 'Least square fitting',
@@ -218,7 +291,7 @@ Module.onRuntimeInitialized = async () => {
             yaxis: {title: 'h (m)'},
         };
 
-        Plotly.newPlot( "graph", [trace0, trace1], layout);
+        Plotly.newPlot( "graph", plot, layout);
         Module._free(amplitudes.byteOffset);
         Module._free(pulsations.byteOffset);
         Module._free(phases.byteOffset);
@@ -238,7 +311,8 @@ Module.onRuntimeInitialized = async () => {
 
     const compBtn = document.getElementById('compBtn');
     compBtn.addEventListener("click", ()=>{
-        analyse();
+        const range = getRange(t);
+        analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
         plotHarmonics();
     });
 
@@ -248,13 +322,14 @@ Module.onRuntimeInitialized = async () => {
         Module._free(txtArray.byteOffset);
         txtArray = createCharArray(await file.bytes());
         readData();
-        analyse();
+        analyse(t, h);
         plotHarmonics();
     }
 
 
     readData();
-    analyse();
+    const range = getRange(t);
+    analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
     plotHarmonics();
 
     let textFile = null;
