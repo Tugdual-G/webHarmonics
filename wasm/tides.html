@@ -3,64 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <title>Harmonic analysis</title>
+    <link rel="stylesheet" href="tides.css" />
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="./harmonics.js"></script>
-    <style>
-        h2 {
-          text-align: center;
-        }
 
-        #selection {
-          width: 50vw;
-          margin: auto;
-        }
-        #graph {
-          margin: auto;
-          padding-bottom: 5vh;
-          padding-top: 5vh;
-        }
-        table {
-          border-collapse: collapse;
-          border: 2px solid rgb(140 140 140);
-          font-family: sans-serif;
-          font-size: 0.8rem;
-          letter-spacing: 1px;
-          margin: auto;
-        }
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
 
-        caption {
-          caption-side: bottom;
-          padding: 10px;
-          font-weight: bold;
-        }
-
-        thead,
-        tfoot {
-          background-color: rgb(228 240 245);
-        }
-
-        th,
-        td {
-          border: 1px solid rgb(160 160 160);
-          padding: 8px 10px;
-        }
-
-        td:last-of-type {
-          text-align: center;
-        }
-
-    </style>
   </head>
   <body>
-    <h2> Tide components analysis </h2>
+    <h2> Tide Least Square Harmonics Estimation </h2>
 
-    <div id="selection">
+    <div class="content" id="selection">
       <input id="inselec" type="file" />
     </div>
     <div id="graph" style="width:1200px;height:800px;"></div>
     <script type="module" src="./main.js"></script>
 
+    \begin{equation*}
+      \LARGE{
+        h(t) = H_0 + \sum_{i \in I}{H_i f_i \cos(a_i t + \theta)}
+      }
+    \end{equation*}
+
+    <div class="values" id="mean_fit">
+      \( H_{0fit} \approx \)  ---
+    </div>
+    <div  class="values" id="mean_data">
+      \( H_{0data} = \)  ---
+    </div>
+
+    <div class="content">
+      <button id="compBtn">Recompute</button>
+      <button id="textFile">Text file</button>
+    </div>
+
+    <div class="content">
+    </div>
     <table>
       <caption>
         Tidal component values
@@ -69,8 +50,9 @@
         <tr>
           <th scope="col"> Name </th>
           <th scope="col"> a (rad/h) </th>
-          <th scope="col"> H (m) </th>
-          <th scope="col"> θ </th>
+          <th scope="col"> Hf (m) </th>
+          <th scope="col"> θ (rad)</th>
+          <th scope="col"> use </th>
         </tr>
       </thead>
       <tbody id="components">

@@ -1,4 +1,7 @@
+let txtArray;
+
 const COMPONENT_SPEEDS = new Map();
+COMPONENT_SPEEDS.set("H0", 0.0);
 COMPONENT_SPEEDS.set("M2", 28.9841042);// Principal lunar semidiurnal degrees/hour
 COMPONENT_SPEEDS.set("S2", 30.0000000);// Principal solar semidiurnal
 COMPONENT_SPEEDS.set("N2", 28.4397295);// Larger lunar elliptic semidiurnal
@@ -14,12 +17,84 @@ COMPONENT_SPEEDS.set("Mm", 0.5443747);  // Lunar monthly
 COMPONENT_SPEEDS.set("Ssa", 0.0821373); // Solar semiannual
 COMPONENT_SPEEDS.set("Sa", 0.0410686);  // Solar annual
 
-const comp_names = [];
-const pulsations0 = [];
-COMPONENT_SPEEDS.forEach((value, key) => {
-    comp_names.push(key);
-    pulsations0.push(Math.PI * value / 180.0);
-});
+let components = {};
+{
+    const comp_names = [];
+    const comp_pul = [];
+    const compute_comp = [];
+    COMPONENT_SPEEDS.forEach((value, key) => {
+        comp_names.push(key);
+        comp_pul.push(Math.PI * value / 180.0);
+        compute_comp.push(true);
+    });
+    compute_comp[0] = false;
+    components.names = comp_names;
+    components.pulsations = comp_pul;
+    components.compute = compute_comp;
+    components.comp_puls = [];
+    components.compStr = "";
+}
+
+function mean(arr){
+    let mean = 0.0;
+    arr.forEach((x)=> mean += x);
+    return mean / arr.length;
+}
+
+function getPulsations(){
+    components.comp_puls = [];
+    for (let i = 0; i<components.names.length; ++i){
+        if ( components.compute[i] == true ){
+            components.comp_puls.push(components.pulsations[i])
+        }
+    }
+}
+
+function fetchComponentsSelection(){
+    for (let i=0; i < components.names.length; ++i){
+        components.compute[i] = document.getElementById(`component${i}`).checked;
+    }
+}
+
+function fillComponentsTable(ampls, phases){
+    let htmlList = "";
+    let i_computed = 0;
+    for (let i = 0; i< components.names.length; ++i){
+        htmlList += "<tr>\n"
+        htmlList += `<td>  ${components.names[i]}  </td>\n`;
+        htmlList += `<td>  ${components.pulsations[i]}  </td>\n`;
+        if (components.compute[i]){
+            htmlList += `<td>  ${ampls[i_computed]}  </td>\n`;
+            htmlList += `<td>  ${phases[i_computed]}  </td>\n`;
+            htmlList += `<td>
+                    <input type="checkbox" id="component${i}" name="scales" checked />
+                </td>\n`;
+            ++i_computed;
+        }else {
+            htmlList += `<td>---</td>\n`;
+            htmlList += `<td>---</td>\n`;
+            htmlList += `<td>
+                    <input type="checkbox" id="component${i}" name="scales" />
+                </td>\n`;
+        }
+        htmlList += "</tr>\n"
+    }
+    document.getElementById('components').innerHTML = htmlList;
+}
+
+function fillComponentsString(ampls, phases){
+    components.compStr = "";
+    let i_computed = 0;
+    for (let i = 0; i< components.names.length; ++i){
+        if (components.compute[i]){
+            components.compStr += `${components.names[i]}`;
+            components.compStr += ` ${components.pulsations[i]}`;
+            components.compStr += ` ${ampls[i_computed]}`;
+            components.compStr += ` ${phases[i_computed]}\n`;
+            ++i_computed;
+        }
+    }
+}
 
 Module.onRuntimeInitialized = async () => {
 
@@ -34,7 +109,7 @@ Module.onRuntimeInitialized = async () => {
 
     function createCharArray(txtBytes){
         const txtPtr = Module._malloc(txtBytes.byteLength + 1);
-        const arr = new Uint8Array(memory.buffer, txtPtr, txtBytes.length + 4);
+        const arr = new Uint8Array(memory.buffer, txtPtr, txtBytes.length + 1);
         arr.set(txtBytes);
         arr[arr.length - 1] = '\0';
         return arr;
@@ -47,60 +122,60 @@ Module.onRuntimeInitialized = async () => {
         return arr;
     }
 
-    async function analyse(file){
 
-        // const txtArray = createCharArray(await resp.bytes());
-        //
-        const txtArray = createCharArray(await file.bytes());
+
+    async function analyse(){
+        fetchComponentsSelection();
+        getPulsations();
+
 
         const t_ptr = createPointerArray(1);
         const h_ptr = createPointerArray(1);
 
         const n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength,
                         t_ptr.byteOffset, h_ptr.byteOffset);
+
         const t = new Float64Array(memory.buffer, t_ptr[0], n_pts);
         const h = new Float64Array(memory.buffer, h_ptr[0], n_pts);
 
-        let h_mean = 0.0;
-        h.forEach((x)=> h_mean += x);
-        h_mean /= h.length;
+        let h_mean = mean(h);
         h.map((x)=> x-h_mean);
 
 
 
-        let pulsations = createF64Array(pulsations0.length);
-        pulsations.set(pulsations0);
+        let pulsations = createF64Array(components.comp_puls.length);
+        pulsations.set(components.comp_puls);
 
-        let amplitudes = createF64Array(pulsations0.length);
+        let amplitudes = createF64Array(components.comp_puls.length);
 
-        let phases = createF64Array(pulsations0.length);
+        let phases = createF64Array(components.comp_puls.length);
 
         Module._getHarmonics(t.byteOffset, h.byteOffset, t.length, pulsations.byteOffset,
                             h_mean, phases.byteOffset, amplitudes.byteOffset, pulsations.length);
 
 
-        let htmlList = "";
-        for (let i = 0; i< comp_names.length; ++i){
-            htmlList += "<tr>\n"
-            htmlList += `<td>  ${comp_names[i]}  </td>\n`;
-            htmlList += `<td>  ${pulsations0[i]}  </td>\n`;
-            htmlList += `<td>  ${amplitudes[i]}  </td>\n`;
-            htmlList += `<td>  ${phases[i]}  </td>\n`;
-            htmlList += "</tr>\n"
-        }
-        document.getElementById('components').innerHTML = htmlList;
+        fillComponentsTable(amplitudes, phases);
+        fillComponentsString(amplitudes, phases);
 
         const t_fit = createF64Array(t.length * 4);
         const h_fit = createF64Array(t.length * 4);
         {
             const dt = (t[t.length - 1] - t[0]) / t_fit.length ;
             for (let i = 0; i<t_fit.length; ++i){
-                t_fit[i] = i * dt;
+                t_fit[i] = i * dt + t[0];
             }
         }
 
         Module._sumHarmonics(t_fit.byteOffset, t_fit.length, pulsations.byteOffset, phases.byteOffset,
                             amplitudes.byteOffset, h_mean, phases.length, h_fit.byteOffset);
+
+
+        const h_fit_mean = mean(h_fit);
+        const meanFitElement = document.getElementById('mean_fit');
+        meanFitElement.innerHTML = meanFitElement.innerHTML.replace("---",`${h_fit_mean}`);
+
+        const meanDataElement = document.getElementById('mean_data');
+        meanDataElement.innerHTML = meanDataElement.innerHTML.replace("---",`${h_mean}`);
 
         var trace0 = {
             x: t,
@@ -123,18 +198,51 @@ Module.onRuntimeInitialized = async () => {
         };
 
         Plotly.newPlot( "graph", [trace0, trace1], layout);
+        Module._free(t.byteOffset);
+        Module._free(h.byteOffset);
+        Module._free(amplitudes.byteOffset);
+        Module._free(pulsations.byteOffset);
+        Module._free(phases.byteOffset);
+
+        Module._free(t_fit.byteOffset);
+        Module._free(h_fit.byteOffset);
+
     }
 
-    const file0 = await fetch("test_data.txt");
-    if (!file0.ok) {
+    fillComponentsTable([], []);
+
+    let file = await fetch("test_data.txt");
+    if (!file.ok) {
     throw new Error(`Response status: ${resp.status}`);
     }
-    analyse(file0);
+    txtArray = createCharArray(await file.bytes());
+
+    const compBtn = document.getElementById('compBtn');
+    compBtn.addEventListener("click", ()=>{
+        analyse();
+    });
 
     const input = document.getElementById('inselec');
-    input.onchange = e => {
-        // getting a hold of the file reference
-        const file = e.target.files[0];
-        analyse(file);
+    input.onchange = async (e) => {
+        file = e.target.files[0];
+        Module._free(txtArray.byteOffset);
+        txtArray = createCharArray(await file.bytes());
+        analyse();
     }
+
+
+    analyse();
+
+    let textFile = null;
+    document.getElementById('textFile').addEventListener("click", ()=>{
+        const comptxt = new Blob([components.compStr], {type: 'text/plain'});
+        if (textFile !== null) {
+            window.URL.revokeObjectURL(textFile);
+        }
+        textFile = window.URL.createObjectURL(comptxt);
+        window.open(textFile, '_blank').focus();
+    });
+
+
 }
+
