@@ -7,13 +7,13 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="./harmonics.js"></script>
     <style>
-     /* body {
-        display: flex;
-        justify-content: center;
-        } */
+        h2 {
+          text-align: center;
+        }
 
         #graph {
           margin: auto;
+          margin-bottom: 5vh;
         }
         table {
           border-collapse: collapse;
@@ -48,12 +48,13 @@
     </style>
   </head>
   <body>
+    <h2> Tide components analysis </h2>
     <div id="graph" style="width:1200px;height:800px;"></div>
     <script type="module" src="./main.js"></script>
 
     <table>
       <caption>
-        Component Values
+        Tidal component values
       </caption>
       <thead>
         <tr>
@@ -64,26 +65,6 @@
         </tr>
       </thead>
       <tbody id=components>
-        <!-- <tr>
-             <th scope="row">Chris</th>
-             <td>HTML tables</td>
-             <td>22</td>
-             </tr>
-             <tr>
-             <th scope="row">Dennis</th>
-             <td>Web accessibility</td>
-             <td>45</td>
-             </tr>
-             <tr>
-             <th scope="row">Sarah</th>
-             <td>JavaScript frameworks</td>
-             <td>29</td>
-             </tr>
-             <tr>
-             <th scope="row">Karen</th>
-             <td>Web performance</td>
-             <td>36</td>
-             </tr> -->
       </tbody>
     </table>
 

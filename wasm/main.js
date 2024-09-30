@@ -117,7 +117,7 @@ Module.onRuntimeInitialized = async () => {
     };
 
     var layout = {
-        title: 'Harmonic analysis',
+        title: 'Least square fitting',
         xaxis: {title: 't (h)'},
         yaxis: {title: 'h (m)'},
     };
