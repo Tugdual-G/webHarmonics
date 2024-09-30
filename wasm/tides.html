@@ -11,9 +11,14 @@
           text-align: center;
         }
 
+        #selection {
+          width: 50vw;
+          margin: auto;
+        }
         #graph {
           margin: auto;
-          margin-bottom: 5vh;
+          padding-bottom: 5vh;
+          padding-top: 5vh;
         }
         table {
           border-collapse: collapse;
@@ -49,6 +54,10 @@
   </head>
   <body>
     <h2> Tide components analysis </h2>
+
+    <div id="selection">
+      <input id="inselec" type="file" />
+    </div>
     <div id="graph" style="width:1200px;height:800px;"></div>
     <script type="module" src="./main.js"></script>
 
@@ -64,7 +73,7 @@
           <th scope="col"> θ </th>
         </tr>
       </thead>
-      <tbody id=components>
+      <tbody id="components">
       </tbody>
     </table>
 
