@@ -1,4 +1,11 @@
 let txtArray;
+let t = null;
+let h = null;
+let h_mean = 0.0;
+
+let pulsations;
+let amplitudes;
+let phases;
 
 const COMPONENT_SPEEDS = new Map();
 COMPONENT_SPEEDS.set("H0", 0.0);
@@ -123,11 +130,14 @@ Module.onRuntimeInitialized = async () => {
     }
 
 
+    async function readData(){
 
-    async function analyse(){
-        fetchComponentsSelection();
-        getPulsations();
-
+        if (t != null){
+            Module._free(t.byteOffset);
+        }
+        if (h != null){
+            Module._free(h.byteOffset);
+        }
 
         const t_ptr = createPointerArray(1);
         const h_ptr = createPointerArray(1);
@@ -135,20 +145,30 @@ Module.onRuntimeInitialized = async () => {
         const n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength,
                         t_ptr.byteOffset, h_ptr.byteOffset);
 
-        const t = new Float64Array(memory.buffer, t_ptr[0], n_pts);
-        const h = new Float64Array(memory.buffer, h_ptr[0], n_pts);
+        t = new Float64Array(memory.buffer, t_ptr[0], n_pts);
+        h = new Float64Array(memory.buffer, h_ptr[0], n_pts);
 
-        let h_mean = mean(h);
+        h_mean = mean(h);
         h.map((x)=> x-h_mean);
 
+        Module._free(t_ptr.byteOffset);
+        Module._free(h_ptr.byteOffset);
 
+        const meanDataElement = document.getElementById('mean_data');
+        meanDataElement.innerHTML = meanDataElement.innerHTML.replace("---",`${h_mean}`);
 
-        let pulsations = createF64Array(components.comp_puls.length);
+    }
+
+    async function analyse(){
+        fetchComponentsSelection();
+        getPulsations();
+
+        pulsations = createF64Array(components.comp_puls.length);
         pulsations.set(components.comp_puls);
 
-        let amplitudes = createF64Array(components.comp_puls.length);
+        amplitudes = createF64Array(components.comp_puls.length);
 
-        let phases = createF64Array(components.comp_puls.length);
+        phases = createF64Array(components.comp_puls.length);
 
         Module._getHarmonics(t.byteOffset, h.byteOffset, t.length, pulsations.byteOffset,
                             h_mean, phases.byteOffset, amplitudes.byteOffset, pulsations.length);
@@ -157,6 +177,9 @@ Module.onRuntimeInitialized = async () => {
         fillComponentsTable(amplitudes, phases);
         fillComponentsString(amplitudes, phases);
 
+    }
+
+    function plotHarmonics(){
         const t_fit = createF64Array(t.length * 4);
         const h_fit = createF64Array(t.length * 4);
         {
@@ -174,8 +197,6 @@ Module.onRuntimeInitialized = async () => {
         const meanFitElement = document.getElementById('mean_fit');
         meanFitElement.innerHTML = meanFitElement.innerHTML.replace("---",`${h_fit_mean}`);
 
-        const meanDataElement = document.getElementById('mean_data');
-        meanDataElement.innerHTML = meanDataElement.innerHTML.replace("---",`${h_mean}`);
 
         var trace0 = {
             x: t,
@@ -198,8 +219,6 @@ Module.onRuntimeInitialized = async () => {
         };
 
         Plotly.newPlot( "graph", [trace0, trace1], layout);
-        Module._free(t.byteOffset);
-        Module._free(h.byteOffset);
         Module._free(amplitudes.byteOffset);
         Module._free(pulsations.byteOffset);
         Module._free(phases.byteOffset);
@@ -220,6 +239,7 @@ Module.onRuntimeInitialized = async () => {
     const compBtn = document.getElementById('compBtn');
     compBtn.addEventListener("click", ()=>{
         analyse();
+        plotHarmonics();
     });
 
     const input = document.getElementById('inselec');
@@ -227,11 +247,15 @@ Module.onRuntimeInitialized = async () => {
         file = e.target.files[0];
         Module._free(txtArray.byteOffset);
         txtArray = createCharArray(await file.bytes());
+        readData();
         analyse();
+        plotHarmonics();
     }
 
 
+    readData();
     analyse();
+    plotHarmonics();
 
     let textFile = null;
     document.getElementById('textFile').addEventListener("click", ()=>{
