@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Harmonic analysis</title>
     <link rel="stylesheet" href="tides.css" />
+    <meta
+    name="description"
+    content="Online computation of harmonic components via least-square fitting." />
+    <title>Harmonic analysis</title>
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="./harmonics.js"></script>
@@ -37,8 +40,8 @@
       </p>
       If the data is in datetime format, provide a format string according to
       <a href="https://en.cppreference.com/w/cpp/io/manip/get_time" target="_blank"> link </a>.
-      Otherwise, if the times values are just numeric values,
-      please provide the number of seconds per unit time in the format field (ex: 3600 for hourly data).
+      Otherwise, if the times values are just plain numeric values,
+      please provide the number of seconds per unit of time in the format field (ex: 3600 for hourly data).
     </div>
 
     <div class="centeredcontent" id="selection">
@@ -111,9 +114,7 @@
 
 
     \begin{equation*}
-      \LARGE{
-        h(t) = H_0 + \sum_{i \in I}{H_i f_i \cos(a_i t + \theta)}
-      }
+      h(t) = H_0 + \sum_{i \in I}{H_i f_i \cos(a_i t + \theta)}
     \end{equation*}
 
 
