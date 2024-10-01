@@ -105,7 +105,10 @@ function fillComponentsTable(ampls, phases){
 }
 
 function fillComponentsString(ampls, phases){
-    components.compStr = "";
+    components.compStr = "#";
+    components.compStr += "t=0 reference datetime ";
+    components.compStr += epoch + "\n";
+    components.compStr += "#name pulsation(rad/h) amplitude(m) phase(rad)\n";
     let i_computed = 0;
     for (let i = 0; i< components.names.length; ++i){
         if (components.compute[i]){
@@ -205,19 +208,31 @@ Module.onRuntimeInitialized = async () => {
         const t_ptr = createPointerArray(1);
         const h_ptr = createPointerArray(1);
         const epoch_ptr = createPointerArray(1);
-        // "%d/%m/%Y %H:%M:%S"
-        let user_format = document.getElementById("format").value;
-        if (!user_format.includes("%")){
-            user_format = "%d/%m/%Y %H:%M:%S";
-        }
-        const format = createCharArray(stringtoChar(user_format));
+
         const sep = document.getElementById("separator").value;
         const col_t = document.getElementById("col_t").value;
         const col_h = document.getElementById("col_h").value;
 
-        const n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength, format.byteOffset,
-                                       sep.charCodeAt(0), col_t, col_h, t_ptr.byteOffset, h_ptr.byteOffset,
-                                       epoch_ptr.byteOffset);
+        // "%d/%m/%Y %H:%M:%S"
+        let user_format = document.getElementById("format").value;
+        let n_pts = 0;
+        if (user_format.includes("%") || isNaN(parseFloat(user_format))){
+            if (isNaN(parseFloat(user_format))){
+                user_format = "%d/%m/%Y %H:%M:%S";
+            }
+            const format = createCharArray(stringtoChar(user_format));
+            n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength, format.byteOffset,
+                                        sep.charCodeAt(0), col_t, col_h, t_ptr.byteOffset, h_ptr.byteOffset,
+                                        epoch_ptr.byteOffset);
+
+        }else {
+            const units = parseFloat(user_format);
+            console.log(units);
+            n_pts = Module._readDataUnits(txtArray.byteOffset, txtArray.byteLength, units,
+                                        sep.charCodeAt(0), col_t, col_h, t_ptr.byteOffset, h_ptr.byteOffset,
+                                        epoch_ptr.byteOffset);
+        }
+
 
         t = new Float64Array(memory.buffer, t_ptr[0], n_pts);
         h = new Float64Array(memory.buffer, h_ptr[0], n_pts);
@@ -262,7 +277,6 @@ Module.onRuntimeInitialized = async () => {
             phases[0] = 0.0;
         }
         fillComponentsTable(amplitudes, phases);
-        fillComponentsString(amplitudes, phases);
 
     }
 
@@ -382,15 +396,13 @@ Module.onRuntimeInitialized = async () => {
         file = e.target.files[0];
         Module._free(txtArray.byteOffset);
         txtArray = createCharArray(await file.bytes());
-        readData();
-        analyse(t, h);
-        plotHarmonics();
     }
 
 
 
     let textFile = null;
     document.getElementById('textFile').addEventListener("click", ()=>{
+        fillComponentsString(amplitudes, phases);
         const comptxt = new Blob([components.compStr], {type: 'text/plain'});
         if (textFile !== null) {
             window.URL.revokeObjectURL(textFile);

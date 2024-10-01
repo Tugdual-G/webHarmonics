@@ -1,6 +1,7 @@
 body {
     width: 80vw;
     margin: auto;
+    font-size: 26px;
 }
 h2 {
     text-align: center;
@@ -62,6 +63,7 @@ td:last-of-type {
 
 button {
     padding: 5px 5px;
+    font-size: 26px;
 }
 
 label {
@@ -79,9 +81,31 @@ label {
 .control_options {
     display: flex;
     justify-content: space-around;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .control {
     /* border: 1px solid grey; */
     padding: 8px 8px;
+}
+.text {
+    width: 75%;
+    margin: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+
+}
+#inselec {
+    font-size: 26px;
+}
+
+footer {
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
+    align-items: center;
+    margin-bottom: 1vh;
+    margin-top: auto;
+    padding-top: 10vh;
 }

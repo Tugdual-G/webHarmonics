@@ -27,6 +27,19 @@
       </nav>
       <h2> Online Tide Least Square Harmonics Estimation </h2>
     </div>
+    <div class="text">
+      <p>
+        This online harmonic analyser can parse sea level data in text format to carry the estimation.
+      </p>
+      <p>
+      Each line in the file should correspond to a data point,
+        at the exception of the eventual header or comments.
+      </p>
+      If the data is in datetime format, provide a format string according to
+      <a href="https://en.cppreference.com/w/cpp/io/manip/get_time" target="_blank"> link </a>.
+      Otherwise, if the times values are just numeric values,
+      please provide the number of seconds per unit time in the format field (ex: 3600 for hourly data).
+    </div>
 
     <div class="centeredcontent" id="selection">
       <input id="inselec" type="file" />
@@ -39,18 +52,20 @@
         <input id="format"
                class="format"
                type="text"
-               value=""
+               value="%d/%m/%Y %H:%M:%S"
                list="format_list"
                placeholder="example %d/%m/%Y %H:%M:%S"
         />
         <datalist id="format_list">
           <option value="%d/%m/%Y %H:%M:%S"></option>
           <option value="%Y-%m-%dT%H:%M:%SZ"></option>
+          <option value="3600.0"></option>
         </datalist>
+
       </div>
 
       <div class="control">
-        columns
+        columns indices
         <label for="col_t">t</label>
         <input id="col_t" class="range" type="number" value="0" min="0" />
         <label for="col_h">h</label>
@@ -62,10 +77,12 @@
         <input id="separator" class="separator" type="text" value=";" minlength="1" maxlength="1"/>
       </div>
 
-      <div class="control">
-        <button id="reload">Reload</button>
-      </div>
     </div>
+
+    <div class="centeredcontent">
+      <button id="reload">Load</button>
+    </div>
+
 
     <div id="graph"></div>
 
@@ -120,6 +137,16 @@
       <tbody id="components">
       </tbody>
     </table>
+
+    <footer>
+      <div class="social" id="github">
+        <a href="https://github.com/Tugdual-G/tugdual-g.github.io/tree/master/apps/tides" target="_blank">GitHub </a>
+      </div>
+
+      <div class="social" id="linkedin">
+        <a href="https://www.linkedin.com/in/tugdual-gaillard-b2503429a/" target="_blank">Linkedin </a>
+      </div>
+    </footer>
 
     <script type="module" defer src="./main.js"></script>
   </body>
