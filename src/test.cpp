@@ -145,8 +145,50 @@ auto test_read_csv_string() -> double {
 
   const char *format = "%d/%m/%Y %H:%M:%S";
   std::string datetime;
-  Tide::read_csv_string(data_str, format, ';', t, h, datetime);
-  std::cout << datetime << "\n";
+  Tide::read_csv_string(data_str, format, ';', 0, 1, t, h, datetime);
+
+  double h_m = Tide::mean(h);
+  for (auto &v : h) {
+    v -= h_m;
+  }
+  std::vector<std::string> names;
+  std::vector<double> pulsations;
+  Tide::get_constituants_const(names, pulsations);
+
+  std::vector<double> phases(pulsations.size());
+  std::vector<double> amplitudes(pulsations.size());
+
+  Tide::harmonic_analysis(t, h, pulsations, 0.0, phases, amplitudes);
+
+  std::vector<double> h_fit =
+      Tide::harmonic_series(t, pulsations, phases, amplitudes);
+
+  Eigen::Map<Eigen::VectorXd> h_eigen(h.data(), (long)h.size());
+  Eigen::Map<Eigen::VectorXd> h_fit_eigen(h_fit.data(), (long)h_fit.size());
+  Eigen::VectorXd error = (h_fit_eigen - h_eigen).cwiseAbs();
+  double norm = error.maxCoeff();
+
+  return norm;
+}
+
+auto test_read_csv_string_units() -> double {
+  std::vector<double> t;
+  std::vector<double> h;
+
+  std::ifstream file;
+
+  file.open("data.txt", std::ios::in);
+  if (file.fail()) {
+    std::cout << "Error, can't open : " << "test_data" << "\n";
+    exit(1);
+  }
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  std::string data_str(buffer.str());
+  file.close();
+
+  std::string datetime;
+  Tide::read_csv_string_units(data_str, ' ', 0, 1, 3600.0, t, h, datetime);
 
   double h_m = Tide::mean(h);
   for (auto &v : h) {
@@ -185,5 +227,10 @@ auto main() -> int {
   error_inf = test_read_csv_string();
   std::cout << "error inf : " << error_inf << "\n";
   assert(error_inf < 2.0e-2);
+
+  error_inf = test_read_csv_string_units();
+  std::cout << "error inf : " << error_inf << "\n";
+  assert(error_inf < 1.0);
+
   return 0;
 }

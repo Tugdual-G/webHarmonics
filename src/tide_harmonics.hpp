@@ -37,8 +37,13 @@ void harmonic_analysis(const std::vector<double> &times,
                        std::vector<double> &amplitudes);
 
 void read_csv_string(const std::string &csv, const char *format, char sep,
-                     std::vector<double> &time, std::vector<double> &value,
-                     std::string &datetime_str);
+                     int col_t, int col_h, std::vector<double> &time,
+                     std::vector<double> &value, std::string &datetime_str);
+
+void read_csv_string_units(const std::string &csv, char sep, int col_t,
+                           int col_h, double units, std::vector<double> &time,
+                           std::vector<double> &value,
+                           std::string &datetime_str);
 
 const std::map<std::string, double> TIDAL_CONST{
     {"M2", 28.9841042}, // Principal lunar semidiurnal degrees/hour

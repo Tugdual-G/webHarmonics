@@ -212,9 +212,11 @@ Module.onRuntimeInitialized = async () => {
         }
         const format = createCharArray(stringtoChar(user_format));
         const sep = document.getElementById("separator").value;
+        const col_t = document.getElementById("col_t").value;
+        const col_h = document.getElementById("col_h").value;
 
         const n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength, format.byteOffset,
-                                       sep.charCodeAt(0), t_ptr.byteOffset, h_ptr.byteOffset,
+                                       sep.charCodeAt(0), col_t, col_h, t_ptr.byteOffset, h_ptr.byteOffset,
                                        epoch_ptr.byteOffset);
 
         t = new Float64Array(memory.buffer, t_ptr[0], n_pts);

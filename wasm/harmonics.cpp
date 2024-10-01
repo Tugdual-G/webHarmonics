@@ -16,8 +16,8 @@ extern "C" {
 EMSCRIPTEN_KEEPALIVE auto _malloc_(int32_t n) -> void * { return malloc(n); }
 
 EMSCRIPTEN_KEEPALIVE auto readData(char *data, long int data_size,
-                                   const char *format, char sep, double **times,
-                                   double **heights,
+                                   const char *format, char sep, int col_t,
+                                   int col_h, double **times, double **heights,
                                    char **datetime_str) -> long int {
   data[data_size - 1] = '\0';
   std::vector<double> t;
@@ -27,7 +27,7 @@ EMSCRIPTEN_KEEPALIVE auto readData(char *data, long int data_size,
 
   std::string data_str(data);
   std::string datetime;
-  Tide::read_csv_string(data_str, format, sep, t, h, datetime);
+  Tide::read_csv_string(data_str, format, sep, col_t, col_h, t, h, datetime);
 
   *heights = (double *)malloc(h.size() * sizeof(double));
   *times = (double *)malloc(t.size() * sizeof(double));

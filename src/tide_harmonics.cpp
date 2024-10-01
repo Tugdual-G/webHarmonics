@@ -177,8 +177,19 @@ void Tide::harmonic_analysis(const std::vector<double> &times,
   std::copy(phases_tmp.begin(), phases_tmp.end(), phases.begin());
 }
 
+auto get_column(std::stringstream &ss, std::string &token, char sep,
+                int col) -> bool {
+  ss.clear();
+  ss.seekg(0, std::ios_base::beg);
+  int i = 0;
+  while (std::getline(ss, token, sep) && i < col) {
+    ++i;
+  }
+  return true;
+}
+
 void Tide::read_csv_string(const std::string &csv, const char *format, char sep,
-                           std::vector<double> &time,
+                           int col_t, int col_h, std::vector<double> &time,
                            std::vector<double> &value,
                            std::string &datetime_str) {
 
@@ -194,14 +205,16 @@ void Tide::read_csv_string(const std::string &csv, const char *format, char sep,
   while (getline(csv_stream, line)) {
     std::stringstream ss(line);
     std::string token;
-    if (getline(ss, token, sep)) {
+    if (get_column(ss, token, sep, col_t)) {
+      // if (getline(ss, token, sep)) {
       std::stringstream datetime_string(token);
       datetime_string >> std::get_time(&t, format);
       if (!datetime_string.fail()) {
         datetime_str = token;
         timestamp_t0 = std::mktime(&t);
         time.push_back(0.0);
-        if (getline(ss, token, sep)) {
+        if (get_column(ss, token, sep, col_h)) {
+          // if (getline(ss, token, sep)) {
           value.push_back(std::stod(token));
         }
         break;
@@ -213,16 +226,53 @@ void Tide::read_csv_string(const std::string &csv, const char *format, char sep,
     std::stringstream ss(line);
     std::string token;
 
-    if (getline(ss, token, sep)) {
+    if (get_column(ss, token, sep, col_t)) {
+      // if (getline(ss, token, sep)) {
       std::stringstream datetime_string(token);
       datetime_string >> std::get_time(&t, format);
       if (!datetime_string.fail()) {
         timestamp = std::mktime(&t) - timestamp_t0;
         time.push_back((double)timestamp / 3600.0);
-        if (getline(ss, token, sep)) {
+        if (get_column(ss, token, sep, col_h)) {
+          // if (getline(ss, token, sep)) {
           value.push_back(std::stod(token));
         }
       }
     }
   }
+}
+
+auto valid_float(std::string &str, double *value) -> bool {
+  try {
+    *value = std::stod(str);
+  } catch (const std::exception &) {
+    return false;
+  }
+  return true;
+}
+
+void Tide::read_csv_string_units(const std::string &csv, char sep, int col_t,
+                                 int col_h, double units,
+                                 std::vector<double> &time,
+                                 std::vector<double> &value,
+                                 std::string &datetime_str) {
+
+  std::stringstream csv_stream(csv);
+  std::string line = "#";
+
+  double val{1.5};
+
+  while (getline(csv_stream, line)) {
+    std::stringstream ss(line);
+    std::string token;
+    if (get_column(ss, token, sep, col_t)) {
+      if (valid_float(token, &val)) {
+        time.push_back(units * val / 3600.0);
+        if (get_column(ss, token, sep, col_h)) {
+          value.push_back(std::stod(token));
+        }
+      }
+    }
+  }
+  datetime_str = std::to_string(time.at(0));
 }
