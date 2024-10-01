@@ -25,66 +25,64 @@
   </head>
   <body>
     <div class="centeredcontent">
+
       <nav id="navMenu">
-          <a href="../../index.html" class="menu-item" action="home">Home page</a>
+        <a href="../../index.html" class="menu-item">Home page</a>
+        <a href="../../apps.html" class="menu-item" >About</a>
       </nav>
-      <h2> Tide Least Square Harmonics Estimation </h2>
+
+      <h2> Least square harmonics estimation </h2>
     </div>
     <div class="text">
       <p>
         This online harmonic analyzer can process discontinuous times series.
+        The computed parameters can be exported in text format.
       </p>
-      <p>
-      The data should be provided in text format to carry the estimation.
-      Each line in the file should correspond to a data point,
-        at the exception of the eventual header or comments.
-      </p>
-      If the data uses a datetime format, provide a format string according to
-      <a href="https://en.cppreference.com/w/cpp/io/manip/get_time" target="_blank"> the c++ std::get_time format </a>.
-      Otherwise, if the times values are just plain numeric values,
-      please provide the number of seconds per unit of time in the format field (ex: 3600 for hourly data).
+        Provide a text file to carry the computation.
     </div>
 
     <div class="centeredcontent" id="selection">
       <input id="inselec" type="file" />
     </div>
 
-    <h3>Data parsing parameters</h3>
-    <div class="control_options">
-      <div class="control">
-        datetime format
-        <input id="format"
-               class="format"
-               type="text"
-               value="%d/%m/%Y %H:%M:%S"
-               list="format_list"
-               placeholder="example %d/%m/%Y %H:%M:%S"
-        />
-        <datalist id="format_list">
-          <option value="%d/%m/%Y %H:%M:%S"></option>
-          <option value="%Y-%m-%dT%H:%M:%SZ"></option>
-          <option value="3600.0"></option>
-        </datalist>
+    <div id="parsing_param">
+      <h4>Data parsing parameters</h4>
+      <div class="control_options">
+        <div class="control">
+          datetime format
+          <input id="format"
+                class="format"
+                type="text"
+                value="%d/%m/%Y %H:%M:%S"
+                list="format_list"
+                placeholder="%d/%m/%Y %H:%M:%S"
+          />
+          <datalist id="format_list">
+            <option value="%d/%m/%Y %H:%M:%S"></option>
+            <option value="%Y-%m-%dT%H:%M:%SZ"></option>
+            <option value="3600.0"></option>
+          </datalist>
 
+        </div>
+
+        <div class="control">
+          column indices
+          <label for="col_t">t</label>
+          <input id="col_t" class="range" type="number" value="0" min="0" />
+          <label for="col_h">h</label>
+          <input id="col_h" class="range" type="number" value="1" min="0" />
+        </div>
+
+        <div class="control">
+          separator
+          <input id="separator" class="separator" type="text" value=";" minlength="1" maxlength="1"/>
+        </div>
       </div>
-
-      <div class="control">
-        column indices
-        <label for="col_t">t</label>
-        <input id="col_t" class="range" type="number" value="0" min="0" />
-        <label for="col_h">h</label>
-        <input id="col_h" class="range" type="number" value="1" min="0" />
-      </div>
-
-      <div class="control">
-        separator
-        <input id="separator" class="separator" type="text" value=";" minlength="1" maxlength="1"/>
-      </div>
-
+      <a href="#helpDataParse"> Help </a>
     </div>
 
     <div class="centeredcontent">
-      <button id="reload">Process data</button>
+      <button id="reload">Parse data</button>
     </div>
 
 
@@ -95,7 +93,7 @@
     </div>
 
 
-    <div class="controlptions">
+    <div class="centeredcontent">
       <div class="control">
         Analysis range
         <label for="t_max">\(t_{min}\)</label>
@@ -105,11 +103,11 @@
       </div>
     </div>
 
-    <div  class="content" id="mean_data">
+    <div  class="centeredcontent" id="mean_data">
       \( \overline{h_{data}} = --- \)
     </div>
 
-    <div  class="content" id="ref_date">
+    <div  class="centeredcontent" id="ref_date">
        dataset reference datetime : ---
     </div>
 
@@ -137,6 +135,18 @@
     \begin{equation*}
       h(t) = H_0 + \sum_{i \in I}{H_i f_i \cos(a_i t + \theta)}
     \end{equation*}
+
+    <div id="helpDataParse" class="text">
+      <h3> Data format </h3>
+      <p>
+      Each line in the file should correspond to a data point,
+        at the exception of the eventual header or comments.
+      </p>
+      If the data uses a datetime format, provide a format string according to
+      <a href="https://en.cppreference.com/w/cpp/io/manip/get_time" target="_blank"> the c++ std::get_time format </a>.
+      Otherwise, if the times values are just plain numeric values,
+      please provide the number of seconds per unit of time in the format field (ex: 3600 for hourly data).
+    </div>
 
     <footer>
       <div class="social" id="github">
