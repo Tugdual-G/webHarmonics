@@ -1,7 +1,7 @@
 ##
 ##
 CC = clang++
-CFLAGS = -Wall -Wextra -O2 -std=c++23
+CFLAGS = -Wall -Wextra -O2 -std=c++23 -I.
 
 # Targets
 all: test plot tide_harmonics.a

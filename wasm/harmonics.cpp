@@ -16,25 +16,32 @@ extern "C" {
 EMSCRIPTEN_KEEPALIVE auto _malloc_(int32_t n) -> void * { return malloc(n); }
 
 EMSCRIPTEN_KEEPALIVE auto readData(char *data, long int data_size,
-                                   double **times,
-                                   double **heights) -> long int {
+                                   const char *format, char sep, double **times,
+                                   double **heights,
+                                   char **datetime_str) -> long int {
   data[data_size - 1] = '\0';
   std::vector<double> t;
   std::vector<double> h;
+  std::cout << "sep : " << sep << "\n";
+  std::cout << "format : " << format << "\n";
 
   std::string data_str(data);
-  Tide::read_csv_string(data_str, t, h);
+  std::string datetime;
+  Tide::read_csv_string(data_str, format, sep, t, h, datetime);
 
   *heights = (double *)malloc(h.size() * sizeof(double));
   *times = (double *)malloc(t.size() * sizeof(double));
+  *datetime_str = (char *)malloc(sizeof(char) * (datetime.size() + 1));
 
-  if (*times == nullptr) {
+  if (*times == nullptr || *datetime_str == nullptr || *heights == nullptr) {
     std::cout << "alloc error \n";
     exit(1);
   }
 
   std::copy(t.begin(), t.end(), *times);
   std::copy(h.begin(), h.end(), *heights);
+  std::copy(datetime.begin(), datetime.end(), *datetime_str);
+  *(*datetime_str + datetime.size()) = '\0';
 
   return (long int)t.size();
 }

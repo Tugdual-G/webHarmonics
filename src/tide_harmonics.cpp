@@ -177,33 +177,35 @@ void Tide::harmonic_analysis(const std::vector<double> &times,
   std::copy(phases_tmp.begin(), phases_tmp.end(), phases.begin());
 }
 
-void Tide::read_csv_string(std::string &csv, std::vector<double> &time,
-                           std::vector<double> &value) {
+void Tide::read_csv_string(const std::string &csv, const char *format, char sep,
+                           std::vector<double> &time,
+                           std::vector<double> &value,
+                           std::string &datetime_str) {
 
   std::stringstream csv_stream(csv);
-  const char *format = "%d/%m/%Y %H:%M:%S";
+  // const char *format = "%d/%m/%Y %H:%M:%S";
   std::tm t = {};
   std::time_t timestamp{0};
   std::time_t timestamp_t0{0};
 
   std::string line = "#";
 
-  while (line.starts_with("#")) {
-    getline(csv_stream, line);
-  }
-
-  {
+  // Pass through the header
+  while (getline(csv_stream, line)) {
     std::stringstream ss(line);
     std::string token;
-    if (getline(ss, token, ';')) {
+    if (getline(ss, token, sep)) {
       std::stringstream datetime_string(token);
       datetime_string >> std::get_time(&t, format);
-      timestamp_t0 = std::mktime(&t);
-      time.push_back(0.0);
-    }
-
-    if (getline(ss, token, ';')) {
-      value.push_back(std::stod(token));
+      if (!datetime_string.fail()) {
+        datetime_str = token;
+        timestamp_t0 = std::mktime(&t);
+        time.push_back(0.0);
+        if (getline(ss, token, sep)) {
+          value.push_back(std::stod(token));
+        }
+        break;
+      }
     }
   }
 
@@ -211,15 +213,16 @@ void Tide::read_csv_string(std::string &csv, std::vector<double> &time,
     std::stringstream ss(line);
     std::string token;
 
-    if (getline(ss, token, ';')) {
+    if (getline(ss, token, sep)) {
       std::stringstream datetime_string(token);
       datetime_string >> std::get_time(&t, format);
-      timestamp = std::mktime(&t) - timestamp_t0;
-      time.push_back((double)timestamp / 3600.0);
-    }
-
-    if (getline(ss, token, ';')) {
-      value.push_back(std::stod(token));
+      if (!datetime_string.fail()) {
+        timestamp = std::mktime(&t) - timestamp_t0;
+        time.push_back((double)timestamp / 3600.0);
+        if (getline(ss, token, sep)) {
+          value.push_back(std::stod(token));
+        }
+      }
     }
   }
 }

@@ -140,10 +140,13 @@ auto test_read_csv_string() -> double {
   }
   std::stringstream buffer;
   buffer << file.rdbuf();
-  std::string data_str = buffer.str();
+  std::string data_str(buffer.str());
   file.close();
 
-  Tide::read_csv_string(data_str, t, h);
+  const char *format = "%d/%m/%Y %H:%M:%S";
+  std::string datetime;
+  Tide::read_csv_string(data_str, format, ';', t, h, datetime);
+  std::cout << datetime << "\n";
 
   double h_m = Tide::mean(h);
   for (auto &v : h) {

@@ -1,7 +1,21 @@
+function typeset(code) {
+  MathJax.startup.promise = MathJax.startup.promise
+    .then(() => MathJax.typesetPromise(code()))
+    .catch((err) => console.log('Typeset failed: ' + err.message));
+  return MathJax.startup.promise;
+}
+
+function toScient(x){
+    let str = x.toExponential(3).replace(/e\+?/, ' \\cdot 10^{');
+    str += "}";
+    return str;
+}
+
 let txtArray;
 let t = null;
 let h = null;
 let h_mean = 0.0;
+let epoch = null;
 
 let pulsations;
 let amplitudes;
@@ -139,6 +153,19 @@ function getRange(x){
     return [i_min, i_max];
 }
 
+function cStringLength(cString){
+    let end = 0;
+    while (cString.getUint8(end) !== 0 && end < 500) {
+        end++
+    }
+    return end;
+}
+
+function stringtoChar(str){
+    var enc = new TextEncoder(); // always utf-8
+    return enc.encode(str);
+}
+
 Module.onRuntimeInitialized = async () => {
 
 
@@ -177,12 +204,25 @@ Module.onRuntimeInitialized = async () => {
 
         const t_ptr = createPointerArray(1);
         const h_ptr = createPointerArray(1);
+        const epoch_ptr = createPointerArray(1);
+        // "%d/%m/%Y %H:%M:%S"
+        let user_format = document.getElementById("format").value;
+        if (!user_format.includes("%")){
+            user_format = "%d/%m/%Y %H:%M:%S";
+        }
+        const format = createCharArray(stringtoChar(user_format));
+        const sep = document.getElementById("separator").value;
 
-        const n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength,
-                        t_ptr.byteOffset, h_ptr.byteOffset);
+        const n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength, format.byteOffset,
+                                       sep.charCodeAt(0), t_ptr.byteOffset, h_ptr.byteOffset,
+                                       epoch_ptr.byteOffset);
 
         t = new Float64Array(memory.buffer, t_ptr[0], n_pts);
         h = new Float64Array(memory.buffer, h_ptr[0], n_pts);
+
+        const epochStrLen = cStringLength(new DataView(memory.buffer, epoch_ptr));
+        const epoch_array = new Uint8Array(memory.buffer, epoch_ptr[0], epochStrLen);
+        epoch = new TextDecoder().decode(epoch_array);
 
         h_mean = mean(h);
         // h.map((x)=> x-h_mean);
@@ -191,7 +231,13 @@ Module.onRuntimeInitialized = async () => {
         Module._free(h_ptr.byteOffset);
 
         const meanDataElement = document.getElementById('mean_data');
-        meanDataElement.innerHTML = meanDataElement.innerHTML.replace("---",`${h_mean} m`);
+        meanDataElement.innerHTML = `\\( \\overline{h_{data}} = ${toScient(h_mean)} ~ m \\)`;
+        typeset(() => {
+        return [meanDataElement];
+        });
+
+        const refDate = document.getElementById('ref_date');
+        refDate.innerHTML = refDate.innerHTML.replace("---", epoch);
 
     }
 
@@ -309,8 +355,21 @@ Module.onRuntimeInitialized = async () => {
     }
     txtArray = createCharArray(await file.bytes());
 
+    readData();
+    const range = getRange(t);
+    analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
+    plotHarmonics();
+
     const compBtn = document.getElementById('compBtn');
     compBtn.addEventListener("click", ()=>{
+        const range = getRange(t);
+        analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
+        plotHarmonics();
+    });
+
+    const reloadBtn = document.getElementById('reload');
+    reloadBtn.addEventListener("click", ()=>{
+        readData();
         const range = getRange(t);
         analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
         plotHarmonics();
@@ -327,10 +386,6 @@ Module.onRuntimeInitialized = async () => {
     }
 
 
-    readData();
-    const range = getRange(t);
-    analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
-    plotHarmonics();
 
     let textFile = null;
     document.getElementById('textFile').addEventListener("click", ()=>{
