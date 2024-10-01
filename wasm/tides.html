@@ -28,18 +28,19 @@
       <nav id="navMenu">
           <a href="../../index.html" class="menu-item" action="home">Home page</a>
       </nav>
-      <h2> Online Tide Least Square Harmonics Estimation </h2>
+      <h2> Tide Least Square Harmonics Estimation </h2>
     </div>
     <div class="text">
       <p>
-        This online harmonic analyser can parse sea level data in text format to carry the estimation.
+        This online harmonic analyzer can process discontinuous times series.
       </p>
       <p>
+      The data should be provided in text format to carry the estimation.
       Each line in the file should correspond to a data point,
         at the exception of the eventual header or comments.
       </p>
-      If the data is in datetime format, provide a format string according to
-      <a href="https://en.cppreference.com/w/cpp/io/manip/get_time" target="_blank"> link </a>.
+      If the data uses a datetime format, provide a format string according to
+      <a href="https://en.cppreference.com/w/cpp/io/manip/get_time" target="_blank"> the c++ std::get_time format </a>.
       Otherwise, if the times values are just plain numeric values,
       please provide the number of seconds per unit of time in the format field (ex: 3600 for hourly data).
     </div>
@@ -51,7 +52,7 @@
     <h3>Data parsing parameters</h3>
     <div class="control_options">
       <div class="control">
-        datetime format string
+        datetime format
         <input id="format"
                class="format"
                type="text"
@@ -83,7 +84,7 @@
     </div>
 
     <div class="centeredcontent">
-      <button id="reload">Load</button>
+      <button id="reload">Process data</button>
     </div>
 
 
@@ -112,16 +113,6 @@
        dataset reference datetime : ---
     </div>
 
-
-    \begin{equation*}
-      h(t) = H_0 + \sum_{i \in I}{H_i f_i \cos(a_i t + \theta)}
-    \end{equation*}
-
-
-    <div class="centeredcontent">
-      <button id="textFile">Table Text Export</button>
-    </div>
-
     <table>
       <caption>
         Tidal component values
@@ -130,6 +121,7 @@
         <tr>
           <th scope="col"> Name </th>
           <th scope="col"> a (rad/h) </th>
+          <th scope="col"> τ (h) </th>
           <th scope="col"> Hf (m) </th>
           <th scope="col"> θ (rad)</th>
           <th scope="col"> use </th>
@@ -138,6 +130,13 @@
       <tbody id="components">
       </tbody>
     </table>
+    <div class="centeredcontent">
+      <button id="textFile">Table Text Export</button>
+    </div>
+
+    \begin{equation*}
+      h(t) = H_0 + \sum_{i \in I}{H_i f_i \cos(a_i t + \theta)}
+    \end{equation*}
 
     <footer>
       <div class="social" id="github">

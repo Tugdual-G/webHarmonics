@@ -17,9 +17,9 @@ let h = null;
 let h_mean = 0.0;
 let epoch = null;
 
-let pulsations;
-let amplitudes;
-let phases;
+let pulsations = null;
+let amplitudes = null;
+let phases = null;
 
 const COMPONENT_SPEEDS = new Map();
 COMPONENT_SPEEDS.set("H0", 0.0);
@@ -43,16 +43,19 @@ let components = {};
     const comp_names = [];
     const comp_pul = [];
     const compute_comp = [];
+    const comp_period = [];
     COMPONENT_SPEEDS.forEach((value, key) => {
         comp_names.push(key);
         comp_pul.push(Math.PI * value / 180.0);
         compute_comp.push(true);
+        comp_period.push(360.0 / value);
     });
     compute_comp[compute_comp.length-1] = false;
     compute_comp[compute_comp.length-2] = false;
     components.names = comp_names;
     components.pulsations = comp_pul;
     components.compute = compute_comp;
+    components.period = comp_period;
     components.comp_puls = [];
     components.compStr = "";
 }
@@ -78,16 +81,42 @@ function fetchComponentsSelection(){
     }
 }
 
+function initComponentsTable(){
+    let htmlList = "";
+    let i_computed = 0;
+    for (let i = 0; i< components.names.length; ++i){
+        htmlList += "<tr>\n"
+        htmlList += `<td>  ${components.names[i]}  </td>\n`;
+        htmlList += `<td>  ${components.pulsations[i].toExponential(3)}  </td>\n`;
+        htmlList += `<td>  ${components.period[i].toExponential(3)}  </td>\n`;
+        htmlList += `<td>---</td>\n`;
+        htmlList += `<td>---</td>\n`;
+        if (components.compute[i]){
+            htmlList += `<td>
+                    <input type="checkbox" id="component${i}" name="scales" checked />
+                </td>\n`;
+            ++i_computed;
+        }else {
+            htmlList += `<td>
+                    <input type="checkbox" id="component${i}" name="scales" />
+                </td>\n`;
+        }
+        htmlList += "</tr>\n"
+    }
+    document.getElementById('components').innerHTML = htmlList;
+}
+
 function fillComponentsTable(ampls, phases){
     let htmlList = "";
     let i_computed = 0;
     for (let i = 0; i< components.names.length; ++i){
         htmlList += "<tr>\n"
         htmlList += `<td>  ${components.names[i]}  </td>\n`;
-        htmlList += `<td>  ${components.pulsations[i]}  </td>\n`;
+        htmlList += `<td>  ${components.pulsations[i].toExponential(3)}  </td>\n`;
+        htmlList += `<td>  ${components.period[i].toExponential(3)}  </td>\n`;
         if (components.compute[i]){
-            htmlList += `<td>  ${ampls[i_computed]}  </td>\n`;
-            htmlList += `<td>  ${phases[i_computed]}  </td>\n`;
+            htmlList += `<td>  ${ampls[i_computed].toExponential(3)}  </td>\n`;
+            htmlList += `<td>  ${phases[i_computed].toExponential(3)}  </td>\n`;
             htmlList += `<td>
                     <input type="checkbox" id="component${i}" name="scales" checked />
                 </td>\n`;
@@ -113,9 +142,9 @@ function fillComponentsString(ampls, phases){
     for (let i = 0; i< components.names.length; ++i){
         if (components.compute[i]){
             components.compStr += `${components.names[i]}`;
-            components.compStr += ` ${components.pulsations[i]}`;
-            components.compStr += ` ${ampls[i_computed]}`;
-            components.compStr += ` ${phases[i_computed]}\n`;
+            components.compStr += ` ${components.pulsations[i].toExponential(8)}`;
+            components.compStr += ` ${ampls[i_computed].toExponential(8)}`;
+            components.compStr += ` ${phases[i_computed].toExponential(8)}\n`;
             ++i_computed;
         }
     }
@@ -262,6 +291,12 @@ Module.onRuntimeInitialized = async () => {
         fetchComponentsSelection();
         getPulsations();
 
+        if (amplitudes != null){
+            Module._free(amplitudes.byteOffset);
+            Module._free(pulsations.byteOffset);
+            Module._free(phases.byteOffset);
+        }
+
         pulsations = createF64Array(components.comp_puls.length);
         pulsations.set(components.comp_puls);
 
@@ -354,16 +389,13 @@ Module.onRuntimeInitialized = async () => {
         };
 
         Plotly.newPlot( "graph", plot, layout);
-        Module._free(amplitudes.byteOffset);
-        Module._free(pulsations.byteOffset);
-        Module._free(phases.byteOffset);
 
         Module._free(t_fit.byteOffset);
         Module._free(h_fit.byteOffset);
 
     }
 
-    fillComponentsTable([], []);
+    initComponentsTable();
 
     let file = await fetch("test_data.txt");
     if (!file.ok) {
