@@ -271,10 +271,7 @@ Module.onRuntimeInitialized = async () => {
         epoch = new TextDecoder().decode(epoch_array);
 
         h_mean = mean(h);
-        // h.map((x)=> x-h_mean);
 
-        Module._free(t_ptr.byteOffset);
-        Module._free(h_ptr.byteOffset);
 
         const meanDataElement = document.getElementById('mean_data');
         meanDataElement.innerHTML = `\\( \\overline{h_{data}} = ${toScient(h_mean)} ~ m \\)`;
@@ -283,7 +280,12 @@ Module.onRuntimeInitialized = async () => {
         });
 
         const refDate = document.getElementById('ref_date');
-        refDate.innerHTML = refDate.innerHTML.replace("---", epoch);
+        refDate.innerHTML = `dataset reference datetime : ${epoch}`;
+
+        Module._free(t_ptr.byteOffset);
+        Module._free(h_ptr.byteOffset);
+        Module._free(epoch_ptr.byteOffset);
+        Module._free(epoch_array.byteOffset);
 
     }
 
