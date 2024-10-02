@@ -126,3 +126,9 @@ nav {
     text-align: center;
     font-size: 26px;
 }
+
+.help {
+    padding: 5px;
+    border: 1px solid grey;
+    border-radius: 5px;
+}

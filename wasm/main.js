@@ -397,13 +397,28 @@ Module.onRuntimeInitialized = async () => {
 
     }
 
+
     initComponentsTable();
 
-    let file = await fetch("test_data.txt");
-    if (!file.ok) {
-    throw new Error(`Response status: ${resp.status}`);
+    let file;
+    const fileInput = document.getElementById('inselec');
+    // In case the file is cached by the navigation
+    if (typeof fileInput.files[0] == "undefined"){
+        document.getElementById("t_min").value = "none";
+        document.getElementById("t_max").value = "2000";
+        document.getElementById("separator").value = ";";
+        document.getElementById("col_t").value = 0;
+        document.getElementById("col_h").value = 1;
+        // "%d/%m/%Y %H:%M:%S"
+        document.getElementById("format").value = "%d/%m/%Y %H:%M:%S";
+        file = await fetch("test_data.txt");
+        txtArray = createCharArray(await file.bytes());
+    } else {
+        file = fileInput.files[0];
+        txtArray = createCharArray(await file.bytes());
     }
-    txtArray = createCharArray(await file.bytes());
+
+
 
     readData();
     const range = getRange(t);
@@ -425,8 +440,7 @@ Module.onRuntimeInitialized = async () => {
         plotHarmonics();
     });
 
-    const input = document.getElementById('inselec');
-    input.onchange = async (e) => {
+    fileInput.onchange = async (e) => {
         file = e.target.files[0];
         Module._free(txtArray.byteOffset);
         txtArray = createCharArray(await file.bytes());

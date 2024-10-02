@@ -35,15 +35,16 @@
     </div>
     <div class="text">
       <p>
-        This online harmonic analyzer can process discontinuous times series.
-        The computed parameters can be exported in text format.
+        This online harmonic analyzer process continous or discontinuous time series to
+        extract the principal components.
       </p>
         Provide a text file to carry the computation.
+        <input id="inselec" type="file"/>
     </div>
 
-    <div class="centeredcontent" id="selection">
-      <input id="inselec" type="file" />
-    </div>
+    <!-- <div class="centeredcontent" id="selection">
+         <input id="inselec" type="file"/>
+         </div> -->
 
     <div id="parsing_param">
       <h4>Data parsing parameters</h4>
@@ -78,7 +79,7 @@
           <input id="separator" class="separator" type="text" value=";" minlength="1" maxlength="1"/>
         </div>
       </div>
-      <a href="#helpDataParse"> Help </a>
+      <a href="#helpDataParse" class="help"> Help </a>
     </div>
 
     <div class="centeredcontent">
