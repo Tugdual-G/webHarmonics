@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="tides.css" />
     <meta
     name="description"
-    content="Online computation of harmonic components via least-square fitting." />
+    content="Tool for online computation of harmonic components via least-square fitting." />
     <title>Harmonic analysis</title>
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -36,7 +36,8 @@
     <div class="text">
       <p>
         This online harmonic analyzer process continous or discontinuous time series to
-        extract the principal components.
+        extract the phase and amplitude of the principal tide components.
+        <a href="#method" >Click here </a> for a presentation of the analysis method.
       </p>
         Provide a text file to carry the computation.
         <input id="inselec" type="file"/>
@@ -114,7 +115,8 @@
 
     <table>
       <caption>
-        Tidal component values
+        Tidal component values,
+        see <a href="#method" > Method </a> for parameters details.
       </caption>
       <thead>
         <tr>
@@ -133,9 +135,6 @@
       <button id="textFile">Table Text Export</button>
     </div>
 
-    \begin{equation*}
-      h(t) = H_0 + \sum_{i \in I}{H_i f_i \cos(a_i t + \theta)}
-    \end{equation*}
 
     <div id="helpDataParse" class="text">
       <h3> Data format </h3>
@@ -147,6 +146,74 @@
       <a href="https://en.cppreference.com/w/cpp/io/manip/get_time" target="_blank"> the c++ std::get_time format </a>.
       Otherwise, if the times values are just plain numeric values,
       please provide the number of seconds per unit of time in the format field (ex: 3600 for hourly data).
+    </div>
+
+    <div id="method" class="text">
+      <h2> Method </h2>
+
+      <h3> Presentation </h3>
+      <p>
+        A signal can be approximated with the following series,
+        \[ h(t) = H_0 + \sum_{j = 1}^{n}{H_j f_j \cos(a_j t + \theta_j)} \]
+        In the case of tides, the pulsations $a_j$,
+        and  the node factor $f_j$ are known astronomical constants.
+        $f_j$ should be close to 1 and vary very slowly over years.
+      </p>
+      <p>
+        We choose to write $A_j = H_j f_j$ when approximating $f_j$ as constant over time.
+      </p>
+
+      <h3> Problem statement </h3>
+      <p>
+      We want to find the $2 \cdot n$ parameters $\theta_j$ and $A_j$ such that they minimise the residual $r_i$
+      for the $m$ data points $(t_i, h_i)$ .
+
+        \[ h_i - H_0 - \sum_{j}^{n}{H_j f_j \cos(a_j t_i + \theta_j)} =  r_i \]
+        \[ h_i - f_i(H, \theta) =  r_i \]
+      $f_i$ is not a linear operator since $\theta$ is in the cosinus, however,
+      the original series can be rewritten to get a linear optimization problem.
+      </p>
+
+      <h4> Linearisation </h4>
+      <p>
+        Using the angle sum identity, one can show that, with well chosen $c_j$ and $s_j$,
+        \begin{equation*}
+          \begin{split}
+            h(t) &= H_0 + \sum_{j}{A_j \cos(a_j t + \theta_j)} \\
+                 &= H_0 + \sum_{j}{c_j \cos(a_j t)} + \sum_{j}{s_j \sin(a_j t)}
+          \end{split}
+        \end{equation*}
+
+        Thus the problem can be written using a linear operator $\mathbf{F}$,
+        \[ \mathbf{h} - \mathbf{F} \cdot \mathbf{x} = \mathbf{r} \]
+
+
+      </p>
+      <p>
+        The relations between the parameters {$A_j$, $\theta_j$} and {$c_j$, $s_j$} are retrieved as follow,
+        \[ c_j \cos(a_j t) + s_j \sin(a_j t) = \sqrt{{c_j}^2 + {s_j}^2 } \left[ \hat{c}_j \cos(a_j t) + \hat{s}_j \sin(a_j t) \right] \]
+        with,
+        $ \hat{c}_j = \frac{c_j}{\sqrt{{c_j}^2 + {s_j}^2 }} $ and $ \hat{s}_j = \frac{s_j}{\sqrt{{c_j}^2 + {s_j}^2 }} $ <br>
+      </p>
+      <p>
+        Then, we can find $\theta$ such that,
+        \begin{equation*}
+            \begin{split}
+                \hat{c}_j \cos(a_j t) + \hat{s}_j \sin(a_j t) &= \cos(\theta_j)\cos(a_j t) - \sin(\theta_j) \sin(a_j t) \\
+                &= \cos(a_j t + \theta_j)
+            \end{split}
+        \end{equation*}
+      </p>
+      <p>
+        Thus,
+        \begin{equation*}
+            \begin{split}
+                \theta_j &= \arctan2(-s_j, c_j) \\
+                A_j &=  \sqrt{{c_j}^2 + {s_j}^2 }
+            \end{split}
+        \end{equation*}
+      </p>
+
     </div>
 
     <footer>

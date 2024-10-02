@@ -3,6 +3,7 @@ body {
     margin: auto;
     font-size: 26px;
 }
+
 h1, h2, h3, h4 {
     text-align: center;
     font-family: sans-serif;
@@ -99,10 +100,10 @@ label {
 .text {
     width: 75%;
     margin: auto;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin-top: 30px;
+    margin-bottom: 30px;
 }
-.text h3{
+.text h3, .text h4{
     text-align: left;
 }
 #inselec {
