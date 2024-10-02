@@ -165,30 +165,63 @@
 
       <h3> Problem statement </h3>
       <p>
-      We want to find the $2 \cdot n$ parameters $\theta_j$ and $A_j$ such that they minimise the residual $r_i$
+      We want to find the $2 \cdot n$ parameters $\theta_j$ and $A_j$ such that they minimise the residual norm $||\boldsymbol{r}||^2$
       for the $m$ data points $(t_i, h_i)$ .
 
-        \[ h_i - H_0 - \sum_{j}^{n}{H_j f_j \cos(a_j t_i + \theta_j)} =  r_i \]
-        \[ h_i - f_i(H, \theta) =  r_i \]
-      $f_i$ is not a linear operator since $\theta$ is in the cosinus, however,
-      the original series can be rewritten to get a linear optimization problem.
+        \[ h_i - H_0 - \sum_{j}^{n}{A_j \cos(a_j t_i + \theta_j)} =  r_i \]
+        \[ h_i - T_i(\boldsymbol{A} , \boldsymbol{\theta}) =  r_i \]
+      $T_i$ a non-linear operator  since $\theta_j$ is in the cosinus, however,
+      the series can be rewritten to get a linear optimization problem.
       </p>
 
       <h4> Linearisation </h4>
       <p>
-        Using the angle sum identity, one can show that, with well chosen $c_j$ and $s_j$,
-        \begin{equation*}
-          \begin{split}
-            h(t) &= H_0 + \sum_{j}{A_j \cos(a_j t + \theta_j)} \\
-                 &= H_0 + \sum_{j}{c_j \cos(a_j t)} + \sum_{j}{s_j \sin(a_j t)}
-          \end{split}
-        \end{equation*}
-
-        Thus the problem can be written using a linear operator $\mathbf{F}$,
-        \[ \mathbf{h} - \mathbf{F} \cdot \mathbf{x} = \mathbf{r} \]
-
+        Using the angle sum identity
+        <a href="#parametersDemo">one can show</a> that with well chosen $c_j$ and $s_j$,
+        \[
+            \sum_{j}{A_j \cos(a_j t + \theta_j)}
+            = \sum_{j}{c_j \cos(a_j t)} + \sum_{j}{s_j \sin(a_j t)}
+        \]
 
       </p>
+      <p>
+        Thus the problem can be written using a linear operator $\boldsymbol{T}$ in matrix form,
+        \[ \boldsymbol{h} - \boldsymbol{T} \cdot \boldsymbol{x} = \boldsymbol{r} \]
+
+       with $\boldsymbol{T}$ as a $m \times 2 n$ matrix and $\boldsymbol{x}$ as a $n$ entries vector,
+
+        \[
+          \boldsymbol{x} =
+          \begin{bmatrix}
+          c_0 \\
+          ... \\
+          c_i   \\
+          s_i   \\
+          c_{i+1} \\
+          s_{i+1} \\
+          ... \\
+          s_{n}
+          \end{bmatrix}
+          ~~~~~~,~~~~~~
+
+          \boldsymbol{T} =
+
+          \begin{bmatrix}
+              &                   & ...               &                       &    \\
+              & \cos(a_j t_{i-1}) & \sin(a_j t_{i-1}) & \cos(a_{j+1} t_{i-1}) &    \\
+              & \cos(a_j t_i)     & \sin(a_j t_i)     & \cos(a_{j+1} t_i)     & ...\\
+          ... & \cos(a_j t_{i+1}) & \sin(a_j t_{i+1}) & \cos(a_{j+1} t_{i+1}) &    \\
+              & \cos(a_j t_{i+2}) & \sin(a_j t_{i+2}) & \cos(a_{j+1} t_{i+2}) &    \\
+              &                   & ...               &                       &
+          \end{bmatrix}
+
+        \]
+
+      </p>
+
+      </p>
+
+      <h4 id="parametersDemo"> Relation between the parameters </h4>
       <p>
         The relations between the parameters {$A_j$, $\theta_j$} and {$c_j$, $s_j$} are retrieved as follow,
         \[ c_j \cos(a_j t) + s_j \sin(a_j t) = \sqrt{{c_j}^2 + {s_j}^2 } \left[ \hat{c}_j \cos(a_j t) + \hat{s}_j \sin(a_j t) \right] \]
@@ -196,7 +229,7 @@
         $ \hat{c}_j = \frac{c_j}{\sqrt{{c_j}^2 + {s_j}^2 }} $ and $ \hat{s}_j = \frac{s_j}{\sqrt{{c_j}^2 + {s_j}^2 }} $ <br>
       </p>
       <p>
-        Then, we can find $\theta$ such that,
+        Then, we can find $\theta_j$ such that,
         \begin{equation*}
             \begin{split}
                 \hat{c}_j \cos(a_j t) + \hat{s}_j \sin(a_j t) &= \cos(\theta_j)\cos(a_j t) - \sin(\theta_j) \sin(a_j t) \\
