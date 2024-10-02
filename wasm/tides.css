@@ -5,6 +5,7 @@ body {
 }
 h1, h2, h3, h4 {
     text-align: center;
+    font-family: sans-serif;
     margin: 2px;
 }
 
@@ -131,4 +132,5 @@ nav {
     padding: 5px;
     border: 1px solid grey;
     border-radius: 5px;
+    font-family: sans-serif;
 }

@@ -351,8 +351,8 @@ Module.onRuntimeInitialized = async () => {
         });
 
         plot.push({
-            x: t_fit.subarray(range[0], range[1]),
-            y: h_fit.subarray(range[0], range[1]),
+            x: t_fit,
+            y: h_fit,
             mode: 'lines',
             name: 'fit',
             line: {
@@ -361,35 +361,49 @@ Module.onRuntimeInitialized = async () => {
             }
         });
 
-        plot.push({
-            x: t_fit.subarray(0, range[0]),
-            y: h_fit.subarray(0, range[0]),
-            mode: 'lines',
-            name: 'extrapolated',
-            line: {
-                color: 'rgb(110, 26, 74)',
-                width: 1.0,
-            }
-        });
 
-        plot.push({
-            x: t_fit.subarray(range[1], t_fit.length),
-            y: h_fit.subarray(range[1], t_fit.length),
-            mode: 'lines',
-            name: 'extrapolated',
-            line: {
-                color: 'rgb(110, 26, 74)',
-                width: 1.0,
-            }
-        });
-
-
+        const min = h_fit.reduce(
+            (accumulator, currentValue) => Math.min(accumulator, currentValue), h_fit[0]);
+        const max = h_fit.reduce(
+            (accumulator, currentValue) => Math.max(accumulator, currentValue), h_fit[0]);
 
         var layout = {
-            title: 'Least square fitting',
+            // title: 'Least square fitting',
             xaxis: {title: 't (h)'},
             yaxis: {title: 'h (m)'},
             legend: {"itemsizing": "constant", "itemwidth": 50},
+            shapes: [
+                {
+                    name: 'Analysis',
+                    type: 'rect',
+                    xref: 'x',
+                    yref: 'y',
+                    x0: t_fit[range[0]],
+                    y0: min - (max - min) * 0.1,
+                    x1: t_fit[range[1]],
+                    y1: max + (max - min) * 0.1,
+                    opacity: 0.1,
+                    fillcolor: 'rgb(110, 26, 74)',
+                }],
+                annotations: [
+                    {
+                    x: (t_fit[range[0]] + t_fit[range[1]])/2.0,
+                    y: max + (max - min) * 0.15,
+                    xref: 'x',
+                    yref: 'y',
+                    text: 'Analysis range',
+                    font: {
+                        family: 'sans serif',
+                        size: 18,
+                        color: 'rgb(110, 26, 74)'
+                    },
+                    color: "red",
+                    showarrow: false,
+                    // arrowhead: 7,
+                    // ax: 0,
+                    // ay: -40
+                    }
+                ],
         };
 
 
