@@ -389,9 +389,12 @@ Module.onRuntimeInitialized = async () => {
             title: 'Least square fitting',
             xaxis: {title: 't (h)'},
             yaxis: {title: 'h (m)'},
+            legend: {"itemsizing": "constant", "itemwidth": 50},
         };
 
+
         Plotly.newPlot( "graph", plot, layout);
+
 
         Module._free(t_fit.byteOffset);
         Module._free(h_fit.byteOffset);
