@@ -35,7 +35,7 @@
     </div>
     <div class="text">
       <p>
-        This online harmonic analyzer process continous or discontinuous time series to
+        This online harmonic analyzer process continuous or discontinuous time series to
         extract the phase and amplitude of the principal tide components.
         <a href="#method" >Click here </a> for a presentation of the analysis method.
       </p>
@@ -154,7 +154,9 @@
       <h3> Presentation </h3>
       <p>
         A signal can be approximated with the following series,
+
         \[ h(t) = H_0 + \sum_{j = 1}^{n}{H_j f_j \cos(a_j t + \theta_j)} \]
+
         In the case of tides, the pulsations $a_j$,
         and  the node factor $f_j$ are known astronomical constants.
         $f_j$ should be close to 1 and vary very slowly over years.
@@ -165,16 +167,18 @@
 
       <h3> Problem statement </h3>
       <p>
-      We want to find the $2 \cdot n$ parameters $\theta_j$ and $A_j$ such that they minimise the residual norm $||\boldsymbol{r}||^2$
-      for the $m$ data points $(t_i, h_i)$ .
+        We want to find the $2 \cdot n$ parameters $\theta_j$ and $A_j$ such as
+        to minimize the residual norm $||\boldsymbol{r}||^2$
+        for the $m$ data points $(t_i, h_i)$ .
 
         \[ h_i - H_0 - \sum_{j}^{n}{A_j \cos(a_j t_i + \theta_j)} =  r_i \]
         \[ h_i - T_i(\boldsymbol{A} , \boldsymbol{\theta}) =  r_i \]
-      $T_i$ a non-linear operator  since $\theta_j$ is in the cosinus, however,
-      the series can be rewritten to get a linear optimization problem.
+
+        With $T_i$, a non-linear operator on the vectors $\boldsymbol{A}$ and $\boldsymbol{\theta}$.<br>
+        However, the series can be rewritten to get a linear optimization problem.
       </p>
 
-      <h4> Linearisation </h4>
+      <h4> Linearization </h4>
       <p>
         Using the angle sum identity
         <a href="#parametersDemo">one can show</a> that with well chosen $c_j$ and $s_j$,
@@ -186,9 +190,9 @@
       </p>
       <p>
         Thus the problem can be written using a linear operator $\boldsymbol{T}$ in matrix form,
+        with $\boldsymbol{T}$ as a $m \times 2 n$ matrix and $\boldsymbol{x}$ as a $2 n$ entries vector,
         \[ \boldsymbol{h} - \boldsymbol{T} \cdot \boldsymbol{x} = \boldsymbol{r} \]
 
-       with $\boldsymbol{T}$ as a $m \times 2 n$ matrix and $\boldsymbol{x}$ as a $n$ entries vector,
 
         \[
           \boldsymbol{x} =
@@ -246,6 +250,14 @@
             \end{split}
         \end{equation*}
       </p>
+      <h3> Computation </h3>
+      <p>
+        A bidiagonal divide and conquer SVD is performed on the $\boldsymbol{T}$
+        matrix to find the approximate solutions of the over-constrained system,
+        \[ \boldsymbol{T}\boldsymbol{x} = \boldsymbol{h} \]
+        The WebAssembly code uses the
+        <a href="https://eigen.tuxfamily.org/dox/classEigen_1_1BDCSVD.html">
+          Eigen </a> solver implementation.
 
     </div>
 
