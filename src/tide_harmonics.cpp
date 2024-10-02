@@ -167,8 +167,11 @@ void Tide::harmonic_analysis(const std::vector<double> &times,
 
   Eigen::Map<Eigen::VectorXd> h_eigen(h.data(), (long)h.size());
 
+  // Eigen::Matrix<double, Eigen::Dynamic, 1> cs_amplitudes =
+  //     A.colPivHouseholderQr().solve(h_eigen);
+
   Eigen::Matrix<double, Eigen::Dynamic, 1> cs_amplitudes =
-      A.colPivHouseholderQr().solve(h_eigen);
+      A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(h_eigen);
 
   auto amplitudes_tmp = Tide::get_amplitudes(cs_amplitudes);
   auto phases_tmp = Tide::get_phases(cs_amplitudes);
