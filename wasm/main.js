@@ -50,8 +50,9 @@ let components = {};
         compute_comp.push(true);
         comp_period.push(360.0 / value);
     });
-    compute_comp[compute_comp.length-1] = false;
-    compute_comp[compute_comp.length-2] = false;
+    for (let i = 1; i < 6; ++i){
+        compute_comp[compute_comp.length-i] = false;
+    }
     components.names = comp_names;
     components.pulsations = comp_pul;
     components.compute = compute_comp;
