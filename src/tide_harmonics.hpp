@@ -18,16 +18,31 @@ public:
                          const std::vector<T> &heights);
 
   void set_amplitudes(const std::vector<T> &amplitudes_in);
+  void set_amplitudes(const T *amplitudes_in, int size);
+
   void set_phases(const std::vector<T> &phases_in);
+  void set_phases(const T *phases_in, int size);
+
   void set_pulsations(const std::vector<T> &pulsations_in);
+  void set_pulsations(const T *pulsations_in, int size);
 
   auto error_inf(const std::vector<T> &t, const std::vector<T> &h) -> T;
   auto error_mean(const std::vector<T> &t, const std::vector<T> &h) -> T;
   auto error_2(const std::vector<T> &t, const std::vector<T> &h) -> T;
 
+  Components() = default;
+
   Components(const std::vector<T> &pulsations) : pulsations(pulsations) {};
 
-  Components();
+  Components(const std::vector<T> &pulsations, const std::vector<T> &amplitudes,
+             const std::vector<T> &phases)
+      : pulsations(pulsations), amplitudes(amplitudes), phases(phases) {
+    if (pulsations.size() != amplitudes.size() ||
+        pulsations.size() != phases.size()) {
+      throw std::invalid_argument("vectors sizes don't match in " +
+                                  std::string(__func__) + "\n");
+    }
+  };
 
 private:
   auto build_lsq_matrix(const std::vector<T> &t)

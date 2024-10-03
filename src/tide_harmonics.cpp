@@ -89,7 +89,7 @@ void Components<T>::harmonic_analysis(const std::vector<T> &times,
                                       const std::vector<T> &heights) {
 
   if (times.size() != heights.size()) {
-    throw std::invalid_argument("vectors size don't match in " +
+    throw std::invalid_argument("vectors sizes don't match in " +
                                 std::string(__func__) + "\n");
   }
 
@@ -121,28 +121,54 @@ void Components<T>::set_pulsations(const std::vector<T> &pulsations_in) {
 }
 
 template <typename T>
+void Components<T>::set_pulsations(const T *pulsations_in, int size) {
+  pulsations.resize(size);
+  std::copy(pulsations_in, pulsations_in + size, pulsations.begin());
+}
+
+template <typename T>
 void Components<T>::set_amplitudes(const std::vector<T> &amplitudes_in) {
-  if (pulsations.size() != amplitudes_in.size()) {
-    throw std::invalid_argument("vectors size don't match in " +
+  if (pulsations.size() != amplitudes_in.size() && !pulsations.empty()) {
+    throw std::invalid_argument("vectors sizes don't match in " +
                                 std::string(__func__) + "\n");
   }
   amplitudes = amplitudes_in;
 }
 
 template <typename T>
+void Components<T>::set_amplitudes(const T *amplitudes_in, int size) {
+  if ((int)pulsations.size() != size && !pulsations.empty()) {
+    throw std::invalid_argument("vectors sizes don't match in " +
+                                std::string(__func__) + "\n");
+  }
+  amplitudes.resize(size);
+  std::copy(amplitudes_in, amplitudes_in + size, amplitudes.begin());
+}
+
+template <typename T>
 void Components<T>::set_phases(const std::vector<T> &phases_in) {
-  if (pulsations.size() != phases_in.size()) {
-    throw std::invalid_argument("vectors size don't match in " +
+  if (pulsations.size() != phases_in.size() && !pulsations.empty()) {
+    throw std::invalid_argument("vectors sizes don't match in " +
                                 std::string(__func__) + "\n");
   }
   phases = phases_in;
 }
 
 template <typename T>
+void Components<T>::set_phases(const T *phases_in, int size) {
+  if ((int)pulsations.size() != size && !pulsations.empty()) {
+    throw std::invalid_argument("vectors sizes don't match in " +
+                                std::string(__func__) + "\n");
+  }
+  phases.resize(size);
+  std::copy(phases_in, phases_in + size, phases.begin());
+}
+
+template <typename T>
 auto Components<T>::error_inf(const std::vector<T> &t,
                               const std::vector<T> &h) -> T {
   if (t.size() != h.size()) {
-    throw std::invalid_argument("vectors size don't match in " +
+    throw std::invalid_argument("vectors sizes don't match in " +
                                 std::string(__func__) + "\n");
   }
   std::vector<T> h_fit = harmonic_series(t);
@@ -162,7 +188,7 @@ template <typename T>
 auto Components<T>::error_mean(const std::vector<T> &t,
                                const std::vector<T> &h) -> T {
   if (t.size() != h.size()) {
-    throw std::invalid_argument("vectors size don't match in " +
+    throw std::invalid_argument("vectors sizes don't match in " +
                                 std::string(__func__) + "\n");
   }
 
@@ -179,7 +205,7 @@ template <typename T>
 auto Components<T>::error_2(const std::vector<T> &t,
                             const std::vector<T> &h) -> T {
   if (t.size() != h.size()) {
-    throw std::invalid_argument("vectors size don't match in " +
+    throw std::invalid_argument("vectors sizes don't match in " +
                                 std::string(__func__) + "\n");
   }
 

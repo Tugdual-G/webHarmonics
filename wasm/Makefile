@@ -6,11 +6,10 @@
 # Define variables
 #
 TARGET = harmonics
-SRCS = harmonics.cpp ../src/tide_harmonics.cpp
 EXPORTED_FUNCTIONS = ['_malloc','_free']
 EXPORTED_RUNTIME_METHODS = ['ccall', 'cwrap', 'wasmMemory']
 
-OUTPUT_FORMAT = -o $(TARGET).js
+OUTPUT_FORMAT = $(TARGET).js
 
 EMCC = em++
 
@@ -19,11 +18,14 @@ CXXFLAGS =  -s EXPORTED_FUNCTIONS="$(EXPORTED_FUNCTIONS)" \
             -std=c++20 \
 			-O3
 
-all: $(TARGET).wasm
+all: $(TARGET).wasm tide_harmonics.o
 
-$(TARGET).wasm: $(SRCS)
-	$(EMCC) $(SRCS) $(OUTPUT_FORMAT) $(CXXFLAGS)
+$(TARGET).wasm: harmonics.cpp tide_harmonics.o
+	$(EMCC) $^ -o $(OUTPUT_FORMAT) $(CXXFLAGS)
+
+tide_harmonics.o: ../src/tide_harmonics.cpp
+	$(EMCC) -std=c++20 -c $^
 
 clean:
-	rm -f $(TARGET).wasm $(TARGET).js
+	rm -f $(TARGET).wasm $(TARGET).js *.o
 # end

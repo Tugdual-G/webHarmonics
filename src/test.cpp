@@ -83,6 +83,23 @@ auto test_harmonic_analysis() {
   assert(error < 1.0e-12);
 }
 
+auto test_setters() {
+
+  Components<double> components;
+  components.set_pulsations(Pulsations.data(), (int)Pulsations.size());
+  components.set_amplitudes(Amplitudes.data(), (int)Amplitudes.size());
+  components.set_phases(Phases.data(), (int)Phases.size());
+
+  std::vector<double> t = range(0.0, 20000.0, 20000);
+  std::vector<double> h = components.harmonic_series(t);
+
+  components.harmonic_analysis(t, h);
+
+  double error = components.error_inf(t, h);
+  std::cout << "setters, error inf : " << error << "\n";
+  assert(error < 1.0e-12);
+}
+
 auto test_read_csv_data() {
   std::vector<double> t;
   std::vector<double> h;
@@ -185,5 +202,6 @@ auto main() -> int {
 
   test_read_csv_string_units();
 
+  test_setters();
   return 0;
 }

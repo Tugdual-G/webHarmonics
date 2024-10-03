@@ -27,8 +27,7 @@ EMSCRIPTEN_KEEPALIVE auto readDataUnits(char *data, long int data_size,
 
   std::string data_str(data);
   std::string datetime;
-  Tide::read_csv_string_units(data_str, sep, col_t, col_h, units, t, h,
-                              datetime);
+  read_csv_string_units(data_str, sep, col_t, col_h, units, t, h, datetime);
 
   *heights = (double *)malloc(h.size() * sizeof(double));
   *times = (double *)malloc(t.size() * sizeof(double));
@@ -59,7 +58,7 @@ EMSCRIPTEN_KEEPALIVE auto readData(char *data, long int data_size,
 
   std::string data_str(data);
   std::string datetime;
-  Tide::read_csv_string(data_str, format, sep, col_t, col_h, t, h, datetime);
+  read_csv_string(data_str, format, sep, col_t, col_h, t, h, datetime);
 
   *heights = (double *)malloc(h.size() * sizeof(double));
   *times = (double *)malloc(t.size() * sizeof(double));
@@ -84,12 +83,12 @@ sumHarmonics(const double *times_in, int n_t, const double *pulsations_in,
              double mean_h, int n_puls, double *height_out) {
 
   std::vector<double> t(times_in, times_in + n_t);
-  std::vector<double> pulsations(pulsations_in, pulsations_in + n_puls);
-  std::vector<double> phases(phases_in, phases_in + n_puls);
-  std::vector<double> amplitudes(amplitudes_in, amplitudes_in + n_puls);
+  Components<double> components;
+  components.set_pulsations(pulsations_in, n_puls);
+  components.set_amplitudes(amplitudes_in, n_puls);
+  components.set_phases(phases_in, n_puls);
 
-  std::vector<double> h =
-      Tide::harmonic_series(t, pulsations, phases, amplitudes);
+  std::vector<double> h = components.harmonic_series(t);
 
   for (auto &v : h) {
     v += mean_h;
@@ -106,16 +105,17 @@ EMSCRIPTEN_KEEPALIVE void getHarmonics(const double *times_in,
 
   std::vector<double> t(times_in, times_in + n_t);
   std::vector<double> h(height_in, height_in + n_t);
-  std::vector<double> pulsations(pulsations_in, pulsations_in + n_puls);
-  std::vector<double> phases(phases_out, phases_out + n_puls);
-  std::vector<double> amplitudes(amplitudes_out, amplitudes_out + n_puls);
+
+  Components<double> components;
+  components.set_pulsations(pulsations_in, n_puls);
 
   for (auto &v : h) {
     v -= mean_h;
   }
-  Tide::harmonic_analysis(t, h, pulsations, phases, amplitudes);
+  components.harmonic_analysis(t, h);
 
-  std::copy(phases.begin(), phases.end(), phases_out);
-  std::copy(amplitudes.begin(), amplitudes.end(), amplitudes_out);
+  std::copy(components.phases.begin(), components.phases.end(), phases_out);
+  std::copy(components.amplitudes.begin(), components.amplitudes.end(),
+            amplitudes_out);
 }
 }
