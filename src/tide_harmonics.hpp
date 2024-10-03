@@ -33,7 +33,7 @@ auto harmonic_series(
 void harmonic_analysis(const std::vector<double> &times,
                        const std::vector<double> &heights,
                        const std::vector<double> &pulsations,
-                       double mean_height, std::vector<double> &phases,
+                       std::vector<double> &phases,
                        std::vector<double> &amplitudes);
 
 void read_csv_string(const std::string &csv, const char *format, char sep,

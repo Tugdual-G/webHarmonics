@@ -143,7 +143,7 @@ auto Tide::mean(std::vector<double> &x) -> double {
 void Tide::harmonic_analysis(const std::vector<double> &times,
                              const std::vector<double> &heights,
                              const std::vector<double> &pulsations,
-                             double mean_height, std::vector<double> &phases,
+                             std::vector<double> &phases,
                              std::vector<double> &amplitudes) {
 
   if (times.size() != heights.size()) {
@@ -151,16 +151,15 @@ void Tide::harmonic_analysis(const std::vector<double> &times,
                                 std::string(__func__) + "\n");
   }
 
-  if (amplitudes.size() != phases.size() ||
-      phases.size() != pulsations.size()) {
-    throw std::invalid_argument("vectors size don't match " +
+  if (pulsations.empty()) {
+    throw std::invalid_argument("Pulsation vector is empty " +
                                 std::string(__func__) + "\n");
   }
 
   auto h = heights;
-  for (auto &v : h) {
-    v = v - mean_height;
-  }
+  // for (auto &v : h) {
+  //   v = v - mean_height;
+  // }
 
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A =
       Tide::build_lsq_matrix(times, pulsations);
@@ -170,14 +169,11 @@ void Tide::harmonic_analysis(const std::vector<double> &times,
   // Eigen::Matrix<double, Eigen::Dynamic, 1> cs_amplitudes =
   //     A.colPivHouseholderQr().solve(h_eigen);
 
-  Eigen::Matrix<double, Eigen::Dynamic, 1> cs_amplitudes =
+  Eigen::Matrix<double, Eigen::Dynamic, 1> X =
       A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(h_eigen);
 
-  auto amplitudes_tmp = Tide::get_amplitudes(cs_amplitudes);
-  auto phases_tmp = Tide::get_phases(cs_amplitudes);
-
-  std::copy(amplitudes_tmp.begin(), amplitudes_tmp.end(), amplitudes.begin());
-  std::copy(phases_tmp.begin(), phases_tmp.end(), phases.begin());
+  amplitudes = Tide::get_amplitudes(X);
+  phases = Tide::get_phases(X);
 }
 
 auto get_column(std::stringstream &ss, std::string &token, char sep,
@@ -279,3 +275,10 @@ void Tide::read_csv_string_units(const std::string &csv, char sep, int col_t,
   }
   datetime_str = std::to_string(time.at(0));
 }
+
+// auto error_inf(const std::vector<double> &pulsations,
+//                const std::vector<double> &amplitude,
+//                const std::vector<double> &phases,
+//                const std::vector<double> &t) -> double {
+
+// };

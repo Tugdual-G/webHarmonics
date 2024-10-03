@@ -49,7 +49,7 @@ auto main() -> int {
 
   std::vector<double> phases(pulsations.size());
   std::vector<double> amplitudes(pulsations.size());
-  Tide::harmonic_analysis(t, h, pulsations, 0.0, phases, amplitudes);
+  Tide::harmonic_analysis(t, h, pulsations, phases, amplitudes);
 
   auto t_fit = range(t.at(0), t.at(t.size() - 1), (int)t.size() * 4);
   std::vector<double> h_fit =

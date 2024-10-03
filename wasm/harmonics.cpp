@@ -113,7 +113,7 @@ EMSCRIPTEN_KEEPALIVE void getHarmonics(const double *times_in,
   for (auto &v : h) {
     v -= mean_h;
   }
-  Tide::harmonic_analysis(t, h, pulsations, 0.0, phases, amplitudes);
+  Tide::harmonic_analysis(t, h, pulsations, phases, amplitudes);
 
   std::copy(phases.begin(), phases.end(), phases_out);
   std::copy(amplitudes.begin(), amplitudes.end(), amplitudes_out);
