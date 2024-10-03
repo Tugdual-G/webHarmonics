@@ -38,7 +38,7 @@ COMPONENT_SPEEDS.set("Mm", 0.5443747);  // Lunar monthly
 COMPONENT_SPEEDS.set("Ssa", 0.0821373); // Solar semiannual
 COMPONENT_SPEEDS.set("Sa", 0.0410686);  // Solar annual
 
-let components = {};
+let available_pulsations = {};
 {
     const comp_names = [];
     const comp_pul = [];
@@ -53,12 +53,12 @@ let components = {};
     for (let i = 1; i < 6; ++i){
         compute_comp[compute_comp.length-i] = false;
     }
-    components.names = comp_names;
-    components.pulsations = comp_pul;
-    components.compute = compute_comp;
-    components.period = comp_period;
-    components.comp_puls = [];
-    components.compStr = "";
+    available_pulsations.names = comp_names;
+    available_pulsations.pulsations = comp_pul;
+    available_pulsations.compute = compute_comp;
+    available_pulsations.period = comp_period;
+    available_pulsations.comp_puls = [];
+    available_pulsations.compStr = "";
 }
 
 function mean(arr){
@@ -68,31 +68,31 @@ function mean(arr){
 }
 
 function getPulsations(){
-    components.comp_puls = [];
-    for (let i = 0; i<components.names.length; ++i){
-        if ( components.compute[i] == true ){
-            components.comp_puls.push(components.pulsations[i])
+    available_pulsations.comp_puls = [];
+    for (let i = 0; i<available_pulsations.names.length; ++i){
+        if ( available_pulsations.compute[i] == true ){
+            available_pulsations.comp_puls.push(available_pulsations.pulsations[i])
         }
     }
 }
 
 function fetchComponentsSelection(){
-    for (let i=0; i < components.names.length; ++i){
-        components.compute[i] = document.getElementById(`component${i}`).checked;
+    for (let i=0; i < available_pulsations.names.length; ++i){
+        available_pulsations.compute[i] = document.getElementById(`component${i}`).checked;
     }
 }
 
 function initComponentsTable(){
     let htmlList = "";
     let i_computed = 0;
-    for (let i = 0; i< components.names.length; ++i){
+    for (let i = 0; i< available_pulsations.names.length; ++i){
         htmlList += "<tr>\n"
-        htmlList += `<td>  ${components.names[i]}  </td>\n`;
-        htmlList += `<td>  ${components.pulsations[i].toExponential(3)}  </td>\n`;
-        htmlList += `<td>  ${components.period[i].toExponential(3)}  </td>\n`;
+        htmlList += `<td>  ${available_pulsations.names[i]}  </td>\n`;
+        htmlList += `<td>  ${available_pulsations.pulsations[i].toExponential(3)}  </td>\n`;
+        htmlList += `<td>  ${available_pulsations.period[i].toExponential(3)}  </td>\n`;
         htmlList += `<td>---</td>\n`;
         htmlList += `<td>---</td>\n`;
-        if (components.compute[i]){
+        if (available_pulsations.compute[i]){
             htmlList += `<td>
                     <input type="checkbox" id="component${i}" name="scales" checked />
                 </td>\n`;
@@ -110,12 +110,12 @@ function initComponentsTable(){
 function fillComponentsTable(ampls, phases){
     let htmlList = "";
     let i_computed = 0;
-    for (let i = 0; i< components.names.length; ++i){
+    for (let i = 0; i< available_pulsations.names.length; ++i){
         htmlList += "<tr>\n"
-        htmlList += `<td>  ${components.names[i]}  </td>\n`;
-        htmlList += `<td>  ${components.pulsations[i].toExponential(3)}  </td>\n`;
-        htmlList += `<td>  ${components.period[i].toExponential(3)}  </td>\n`;
-        if (components.compute[i]){
+        htmlList += `<td>  ${available_pulsations.names[i]}  </td>\n`;
+        htmlList += `<td>  ${available_pulsations.pulsations[i].toExponential(3)}  </td>\n`;
+        htmlList += `<td>  ${available_pulsations.period[i].toExponential(3)}  </td>\n`;
+        if (available_pulsations.compute[i]){
             htmlList += `<td>  ${ampls[i_computed].toExponential(3)}  </td>\n`;
             htmlList += `<td>  ${phases[i_computed].toExponential(3)}  </td>\n`;
             htmlList += `<td>
@@ -135,17 +135,17 @@ function fillComponentsTable(ampls, phases){
 }
 
 function fillComponentsString(ampls, phases){
-    components.compStr = "#";
-    components.compStr += "t=0 reference datetime ";
-    components.compStr += epoch + "\n";
-    components.compStr += "#name pulsation(rad/h) amplitude(m) phase(rad)\n";
+    available_pulsations.compStr = "#";
+    available_pulsations.compStr += "t=0 reference datetime ";
+    available_pulsations.compStr += epoch + "\n";
+    available_pulsations.compStr += "#name pulsation(rad/h) amplitude(m) phase(rad)\n";
     let i_computed = 0;
-    for (let i = 0; i< components.names.length; ++i){
-        if (components.compute[i]){
-            components.compStr += `${components.names[i]}`;
-            components.compStr += ` ${components.pulsations[i].toExponential(8)}`;
-            components.compStr += ` ${ampls[i_computed].toExponential(8)}`;
-            components.compStr += ` ${phases[i_computed].toExponential(8)}\n`;
+    for (let i = 0; i< available_pulsations.names.length; ++i){
+        if (available_pulsations.compute[i]){
+            available_pulsations.compStr += `${available_pulsations.names[i]}`;
+            available_pulsations.compStr += ` ${available_pulsations.pulsations[i].toExponential(8)}`;
+            available_pulsations.compStr += ` ${ampls[i_computed].toExponential(8)}`;
+            available_pulsations.compStr += ` ${phases[i_computed].toExponential(8)}\n`;
             ++i_computed;
         }
     }
@@ -300,17 +300,17 @@ Module.onRuntimeInitialized = async () => {
             Module._free(phases.byteOffset);
         }
 
-        pulsations = createF64Array(components.comp_puls.length);
-        pulsations.set(components.comp_puls);
+        pulsations = createF64Array(available_pulsations.comp_puls.length);
+        pulsations.set(available_pulsations.comp_puls);
 
-        amplitudes = createF64Array(components.comp_puls.length);
+        amplitudes = createF64Array(available_pulsations.comp_puls.length);
 
-        phases = createF64Array(components.comp_puls.length);
+        phases = createF64Array(available_pulsations.comp_puls.length);
 
         Module._getHarmonics(times.byteOffset, heights.byteOffset, times.length, pulsations.byteOffset,
                             h_mean, phases.byteOffset, amplitudes.byteOffset, pulsations.length);
 
-        if (components.compute[0]){
+        if (available_pulsations.compute[0]){
             amplitudes[0] = h_mean + amplitudes[0]*Math.cos(phases[0]);
             phases[0] = 0.0;
         }
@@ -329,7 +329,7 @@ Module.onRuntimeInitialized = async () => {
         }
 
         let mean_plot = h_mean;
-        if (components.compute[0]){
+        if (available_pulsations.compute[0]){
             mean_plot = 0.0;
         }
         Module._sumHarmonics(t_fit.byteOffset, t_fit.length, pulsations.byteOffset, phases.byteOffset,
@@ -469,7 +469,7 @@ Module.onRuntimeInitialized = async () => {
     let textFile = null;
     document.getElementById('textFile').addEventListener("click", ()=>{
         fillComponentsString(amplitudes, phases);
-        const comptxt = new Blob([components.compStr], {type: 'text/plain'});
+        const comptxt = new Blob([available_pulsations.compStr], {type: 'text/plain'});
         if (textFile !== null) {
             window.URL.revokeObjectURL(textFile);
         }
