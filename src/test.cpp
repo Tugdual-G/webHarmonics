@@ -68,46 +68,26 @@ auto range(double x0, double x1, int n) -> std::vector<double> {
 
 auto test_harmonic_analysis() {
 
+  Components components(Pulsations);
+  components.set_amplitudes(Amplitudes);
+  components.set_phases(Phases);
+
   std::vector<double> t = range(0.0, 20000.0, 20000);
-  std::vector<double> h =
-      Tide::harmonic_series(t, Pulsations, Phases, Amplitudes);
+  std::vector<double> h = components.harmonic_series(t);
 
-  double h_m = Tide::mean(h);
-  for (auto &v : h) {
-    v -= h_m;
-  }
+  components.harmonic_analysis(t, h);
 
-  std::vector<double> amplitudes_fit(Pulsations.size());
-  std::vector<double> phases_fit(Pulsations.size());
-
-  Tide::harmonic_analysis(t, h, Pulsations, phases_fit, amplitudes_fit);
-
-  Eigen::Map<Eigen::VectorXd> amplitudes_fit_eigen(amplitudes_fit.data(),
-                                                   (long)amplitudes_fit.size());
-
-  std::vector<double> amplitudes = Amplitudes;
-  std::vector<double> pulsations = Pulsations;
-  Eigen::Map<Eigen::VectorXd> amplitudes_eigen(amplitudes.data(),
-                                               (long)amplitudes.size());
-
-  Eigen::Map<Eigen::VectorXd> pulsations_eigen(pulsations.data(),
-                                               (long)pulsations.size());
-
-  Eigen::VectorXd residual = (amplitudes_eigen - amplitudes_fit_eigen)
-                                 .cwiseAbs()
-                                 .cwiseProduct(pulsations_eigen);
-
-  double error = residual.maxCoeff();
+  double error = components.error_inf(t, h);
   std::cout << "harmonic_analysis on Ideal signal, error inf : " << error
             << "\n";
-  assert(error < 1.0e-5);
+  assert(error < 1.0e-12);
 }
 
 auto test_read_csv_data() {
   std::vector<double> t;
   std::vector<double> h;
 
-  Tide::read_csv_data("test_data.txt", t, h);
+  read_csv_data("test_data.txt", t, h);
 
   double h_m = Tide::mean(h);
   for (auto &v : h) {
@@ -117,22 +97,14 @@ auto test_read_csv_data() {
   std::vector<double> pulsations;
   Tide::get_constituants_const(names, pulsations);
 
-  std::vector<double> phases(pulsations.size());
-  std::vector<double> amplitudes(pulsations.size());
+  Components components(pulsations);
 
-  Tide::harmonic_analysis(t, h, pulsations, phases, amplitudes);
+  components.harmonic_analysis(t, h);
 
-  std::vector<double> h_fit =
-      Tide::harmonic_series(t, pulsations, phases, amplitudes);
-
-  Eigen::Map<Eigen::VectorXd> h_eigen(h.data(), (long)h.size());
-  Eigen::Map<Eigen::VectorXd> h_fit_eigen(h_fit.data(), (long)h_fit.size());
-
-  Eigen::VectorXd residual = (h_fit_eigen - h_eigen).cwiseAbs();
-  double error = residual.sum() / (double)residual.rows();
+  double error = components.error_mean(t, h);
 
   std::cout << "read_csv_data, mean error : " << error << "\n";
-  assert(error < 2.0e-2);
+  assert(error < 1.0e-2);
 }
 
 auto test_read_csv_string() {
@@ -153,7 +125,7 @@ auto test_read_csv_string() {
 
   const char *format = "%d/%m/%Y %H:%M:%S";
   std::string datetime;
-  Tide::read_csv_string(data_str, format, ';', 0, 1, t, h, datetime);
+  read_csv_string(data_str, format, ';', 0, 1, t, h, datetime);
 
   double h_m = Tide::mean(h);
   for (auto &v : h) {
@@ -162,20 +134,10 @@ auto test_read_csv_string() {
   std::vector<std::string> names;
   std::vector<double> pulsations;
   Tide::get_constituants_const(names, pulsations);
+  Components components(pulsations);
 
-  std::vector<double> phases(pulsations.size());
-  std::vector<double> amplitudes(pulsations.size());
-
-  Tide::harmonic_analysis(t, h, pulsations, phases, amplitudes);
-
-  std::vector<double> h_fit =
-      Tide::harmonic_series(t, pulsations, phases, amplitudes);
-
-  Eigen::Map<Eigen::VectorXd> h_eigen(h.data(), (long)h.size());
-  Eigen::Map<Eigen::VectorXd> h_fit_eigen(h_fit.data(), (long)h_fit.size());
-
-  Eigen::VectorXd residual = (h_fit_eigen - h_eigen).cwiseAbs();
-  double error = residual.sum() / (double)residual.rows();
+  components.harmonic_analysis(t, h);
+  double error = components.error_mean(t, h);
 
   std::cout << "read_csv_string, mean error : " << error << "\n";
   assert(error < 2.0e-2);
@@ -184,39 +146,33 @@ auto test_read_csv_string() {
 auto toTextFormat(std::vector<double> &t,
                   std::vector<double> &h) -> std::string {
   std::stringstream ss;
+  ss.precision(14);
+  ss << std::scientific;
   for (int i = 0; i < (int)h.size(); ++i) {
-    ss << std::to_string(t.at(i)) << " ";
-    ss << std::to_string(h.at(i)) << "\n";
+    ss << t.at(i) << " ";
+    ss << h.at(i) << "\n";
   }
   return ss.str();
 }
 
 auto test_read_csv_string_units() {
-  std::vector<double> t = range(0.0, 8000.0, 16000);
-  std::vector<double> h =
-      Tide::harmonic_series(t, Pulsations, Phases, Amplitudes);
+  Components components(Pulsations);
+  components.set_phases(Phases);
+  components.set_amplitudes(Amplitudes);
+
+  std::vector<double> t = range(0.0, 20000.0, 20000);
+  std::vector<double> h = components.harmonic_series(t);
 
   std::string data_str = toTextFormat(t, h);
 
   std::string datetime;
-  Tide::read_csv_string_units(data_str, ' ', 0, 1, 3600.0, t, h, datetime);
+  read_csv_string_units(data_str, ' ', 0, 1, 3600.0, t, h, datetime);
 
-  std::vector<double> phases(Pulsations.size());
-  std::vector<double> amplitudes(Pulsations.size());
-
-  Tide::harmonic_analysis(t, h, Pulsations, phases, amplitudes);
-
-  std::vector<double> h_fit =
-      Tide::harmonic_series(t, Pulsations, phases, amplitudes);
-
-  Eigen::Map<Eigen::VectorXd> h_eigen(h.data(), (long)h.size());
-  Eigen::Map<Eigen::VectorXd> h_fit_eigen(h_fit.data(), (long)h_fit.size());
-
-  Eigen::VectorXd residual = (h_fit_eigen - h_eigen).cwiseAbs();
-  double error = residual.sum() / (double)residual.rows();
+  components.harmonic_analysis(t, h);
+  double error = components.error_mean(t, h);
 
   std::cout << "read_csv_string_unit, mean error : " << error << "\n";
-  assert(error < 2.0e-6);
+  assert(error < 1.0e-12);
 }
 
 auto main() -> int {

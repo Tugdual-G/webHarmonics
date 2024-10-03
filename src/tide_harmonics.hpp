@@ -6,44 +6,44 @@
 #include <string>
 #include <vector>
 
+template <typename T> class Components {
+public:
+  std::vector<T> pulsations;
+  std::vector<T> amplitudes;
+  std::vector<T> phases;
+
+  auto harmonic_series(const std::vector<T> &t) -> std::vector<T>;
+
+  void harmonic_analysis(const std::vector<T> &times,
+                         const std::vector<T> &heights);
+
+  void set_amplitudes(const std::vector<T> &amplitudes_in);
+  void set_phases(const std::vector<T> &phases_in);
+  void set_pulsations(const std::vector<T> &pulsations_in);
+
+  auto error_inf(const std::vector<T> &t, const std::vector<T> &h) -> T;
+  auto error_mean(const std::vector<T> &t, const std::vector<T> &h) -> T;
+  auto error_2(const std::vector<T> &t, const std::vector<T> &h) -> T;
+
+  Components(const std::vector<T> &pulsations) : pulsations(pulsations) {};
+
+  Components();
+
+private:
+  auto build_lsq_matrix(const std::vector<T> &t)
+      -> Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
+  auto extract_amplitudes(Eigen::Matrix<T, Eigen::Dynamic, 1> &X);
+
+  auto extract_phases(Eigen::Matrix<T, Eigen::Dynamic, 1> &X);
+};
+
 namespace Tide {
-void read_csv_data(std::string fname, std::vector<double> &time,
-                   std::vector<double> &value);
 
 void get_constituants_const(std::vector<std::string> &names,
                             std::vector<double> &pulsation);
 
-auto build_lsq_matrix(const std::vector<double> &t,
-                      const std::vector<double> &pulsations)
-    -> Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
-
-auto get_amplitudes(Eigen::Matrix<double, Eigen::Dynamic, 1> &cs_ampl)
-    -> std::vector<double>;
-
-auto get_phases(Eigen::Matrix<double, Eigen::Dynamic, 1> &cs_ampl)
-    -> std::vector<double>;
-
-auto mean(std::vector<double> &x) -> double;
-
-auto harmonic_series(
-    const std::vector<double> &t, const std::vector<double> &pulsation,
-    const std::vector<double> &phase,
-    const std::vector<double> &amplitude) -> std::vector<double>;
-
-void harmonic_analysis(const std::vector<double> &times,
-                       const std::vector<double> &heights,
-                       const std::vector<double> &pulsations,
-                       std::vector<double> &phases,
-                       std::vector<double> &amplitudes);
-
-void read_csv_string(const std::string &csv, const char *format, char sep,
-                     int col_t, int col_h, std::vector<double> &time,
-                     std::vector<double> &value, std::string &datetime_str);
-
-void read_csv_string_units(const std::string &csv, char sep, int col_t,
-                           int col_h, double units, std::vector<double> &time,
-                           std::vector<double> &value,
-                           std::string &datetime_str);
+template <typename T> auto mean(std::vector<T> &x) -> T;
 
 const std::map<std::string, double> TIDAL_CONST{
     {"M2", 28.9841042}, // Principal lunar semidiurnal degrees/hour
@@ -63,4 +63,17 @@ const std::map<std::string, double> TIDAL_CONST{
 };
 
 } // namespace Tide
+
+void read_csv_string(const std::string &csv, const char *format, char sep,
+                     int col_t, int col_h, std::vector<double> &time,
+                     std::vector<double> &value, std::string &datetime_str);
+
+void read_csv_string_units(const std::string &csv, char sep, int col_t,
+                           int col_h, double units, std::vector<double> &time,
+                           std::vector<double> &value,
+                           std::string &datetime_str);
+
+void read_csv_data(std::string fname, std::vector<double> &time,
+                   std::vector<double> &value);
+
 #endif // TIDE_HARMONICS_H_

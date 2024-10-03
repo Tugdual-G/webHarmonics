@@ -33,7 +33,7 @@ auto main() -> int {
   std::vector<double> t;
   std::vector<double> h;
 
-  Tide::read_csv_data("../data/95_2023.txt", t, h);
+  read_csv_data("../data/95_2023.txt", t, h);
 
   double h_m = Tide::mean(h);
   for (auto &v : h) {
@@ -44,16 +44,13 @@ auto main() -> int {
 
   std::vector<std::string> names;
   std::vector<double> pulsations;
-
   Tide::get_constituants_const(names, pulsations);
+  Components components(pulsations);
 
-  std::vector<double> phases(pulsations.size());
-  std::vector<double> amplitudes(pulsations.size());
-  Tide::harmonic_analysis(t, h, pulsations, phases, amplitudes);
+  components.harmonic_analysis(t, h);
 
   auto t_fit = range(t.at(0), t.at(t.size() - 1), (int)t.size() * 4);
-  std::vector<double> h_fit =
-      Tide::harmonic_series(t_fit, pulsations, phases, amplitudes);
+  std::vector<double> h_fit = components.harmonic_series(t_fit);
 
   write_data("data_fit.txt", t_fit, h_fit);
 
