@@ -77,6 +77,13 @@ EMSCRIPTEN_KEEPALIVE auto readData(char *data, long int data_size,
   return (long int)t.size();
 }
 
+struct CompPointer {
+  void *componentsObjects;
+  void *amplitudesData;
+  void *pulsationsData;
+  void *phasesData;
+};
+
 EMSCRIPTEN_KEEPALIVE void
 sumHarmonics(const double *times_in, int n_t, const double *pulsations_in,
              const double *phases_in, const double *amplitudes_in,
