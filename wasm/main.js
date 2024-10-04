@@ -77,6 +77,13 @@ function getChosenPulsations(){
     }
 }
 
+function range(start, stop, array){
+    const dx = (start - stop) / array.length ;
+    for (let i = 0; i < array.length; ++i){
+        array[i] = i * dx + start;
+    }
+}
+
 function initComponentsTable(available_pulsations){
     let htmlList = "";
     let i_computed = 0;
@@ -202,18 +209,14 @@ function readData(data){
 
 }
 
-function analyze(components, data){
-    getChosenPulsations();
-    components.setPulsation(available_pulsations.comp_puls);
-    const range = getRange(data.t);
-
+async function analyze(components, data){
     components.analyze(data.t.subarray(range[0], range[1]), data.h.subarray(range[0], range[1]), data.mean);
 
     if (available_pulsations.compute[0]){
         components.amplitudes[0] = data.mean + components.amplitudes[0]*Math.cos(components.phases[0]);
         components.phases[0] = 0.0;
     }
-    fillComponentsTable(components.amplitudes, components.phases);
+
     let mean = data.mean;
     if (available_pulsations.compute[0]){
         mean = 0.0;
@@ -222,7 +225,54 @@ function analyze(components, data){
     console.log(error);
 }
 
-function plotHarmonics(components, data){
+function errorInf(arr0, arr1){
+    let maxDiff = 0.0;
+    let diff = 0.0;
+    for (let i = 0; i < arr0.length; ++i){
+        diff = Math.abs(arr0[i]-arr1[i]);
+        if (diff > maxDiff){
+            maxDiff = diff;
+        }
+    }
+    return maxDiff;
+}
+
+function test(components, data){
+
+    analyze(components, data);
+
+    const data_test = new Data();
+    data_test.h = createF64Array(data.t.length);
+    data_test.t = data.t;
+    data_test.epoch = data.epoch;
+    data_test.mean = data.mean;
+
+    let mean = data.mean;
+    if (available_pulsations.compute[0]){
+        mean = 0.0;
+    }
+    components.sumHarmonics(data_test.t, data_test.h, mean);
+
+    const components_test = new Components();
+    components_test.setPulsation(components.pulsations);
+    analyze(components_test, data_test);
+
+    for (let i = 0; i < components.phases.length; ++i){
+        components.phases[i] %= 2.0 * Math.PI;
+        components_test.phases[i] %= 2.0 * Math.PI;
+    }
+
+    const errorAmplitudes = errorInf(components.amplitudes, components_test.amplitudes);
+    const errorPhases = errorInf(components.phases, components_test.phases);
+
+    console.log("Amplitudes error : ", errorAmplitudes);
+    console.log("Phases error : ", errorPhases);
+
+    Module._free(data_test.h.byteOffset);
+    components_test.free();
+}
+
+async function plotHarmonics(components, data){
     const t_fit = createF64Array(data.t.length * 2);
     const h_fit = createF64Array(data.t.length * 2);
     {
@@ -247,6 +297,14 @@ function plotHarmonics(components, data){
 
 }
 
+function analyzeCycle(components, data){
+    getChosenPulsations();
+    components.setPulsation(available_pulsations.comp_puls);
+    const range = getRange(data.t);
+    analyze(components, data.subData(range));
+    fillComponentsTable(components.amplitudes, components.phases);
+    plotHarmonics(components, data);
+}
 
 function main(){
 
@@ -274,28 +332,19 @@ function main(){
             data.txt = createCharArray(await file.bytes());
         }
 
-
-
         readData(data);
         const components = new Components();
-        analyze(components, data);
-        fillComponentsTable(components.amplitudes, components.phases);
-
-        plotHarmonics(components, data);
+        analyzeCycle(components, data);
 
         const compBtn = document.getElementById('compBtn');
         compBtn.addEventListener("click", ()=>{
-            analyze(components, data);
-            plotHarmonics(components, data);
+            analyzeCycle(components, data);
         });
 
         const reloadBtn = document.getElementById('reload');
         reloadBtn.addEventListener("click", ()=>{
-            console.profile();
             readData(data);
-            analyze(components, data);
-            plotHarmonics(components, data);
-            console.profileEnd();
+            analyzeCycle(components, data);
         });
 
         fileInput.onchange = async (e) => {
@@ -314,5 +363,8 @@ function main(){
             textFile = window.URL.createObjectURL(comptxt);
             window.open(textFile, '_blank').focus();
         });
+
+        const range = getRange(data.t);
+        test(components, data.subData(range));
     }
 }

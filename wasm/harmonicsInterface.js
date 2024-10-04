@@ -46,6 +46,17 @@ export class Components {
                         this.amplitudes.byteOffset, this.pulsations.length,
                         mean);
     }
+    free(){
+        if (this.amplitudes != null){
+            Module._free(this.amplitudes.byteOffset);
+        }
+        if (this.phases != null){
+            Module._free(this.phases.byteOffset);
+        }
+        if (this.pulsations != null){
+            Module._free(this.pulsations.byteOffset);
+        }
+    }
 }
 
 export class Data {
@@ -57,7 +68,16 @@ export class Data {
         this.mean = 0.0;
     }
 
-  readData(sep, col_t, col_h, userFormat){
+    subData(range){
+        const sub = new Data();
+        sub.t = this.t.subarray(range[0], range[1]);
+        sub.h = this.h.subarray(range[0], range[1]);
+        sub.epoch = this.epoch;
+        sub.mean = this.mean;
+        return sub;
+    }
+
+    readData(sep, col_t, col_h, userFormat){
 
         // if (this.t != null){
         //     Module._free(this.t.byteOffset);
