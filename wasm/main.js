@@ -79,8 +79,8 @@ function getChosenPulsations(){
     }
 }
 
-function range(start, stop, array){
-    const dx = (start - stop) / array.length ;
+function linspace(start, stop, array){
+    const dx = (stop - start) / array.length ;
     for (let i = 0; i < array.length; ++i){
         array[i] = i * dx + start;
     }
@@ -169,10 +169,7 @@ function getRange(x){
         while (i_min < x.length && x[i_min] < t_min){
             ++i_min;
         }
-    }else{
-        i_min = 0;
     }
-
     if (!isNaN(t_max)){
         i_max = i_min;
         while (i_max < x.length && x[i_max] < t_max ){
@@ -208,7 +205,7 @@ function readData(data){
 }
 
 async function analyze(components, data){
-    components.analyze(data.t.subarray(range[0], range[1]), data.h.subarray(range[0], range[1]), data.mean);
+    components.analyze(data.t, data.h, data.mean);
 
     if (available_pulsations.compute[0]){
         components.amplitudes[0] = data.mean + components.amplitudes[0]*Math.cos(components.phases[0]);
@@ -273,12 +270,7 @@ function test(components, data){
 async function plotHarmonics(components, data){
     const t_fit = createF64Array(data.t.length * 2);
     const h_fit = createF64Array(data.t.length * 2);
-    {
-        const dt = (data.t[data.t.length - 1] - data.t[0]) / t_fit.length ;
-        for (let i = 0; i<t_fit.length; ++i){
-            t_fit[i] = i * dt + data.t[0];
-        }
-    }
+    linspace(data.t[0], data.t[data.t.length - 1], t_fit)
 
     let mean_plot = data.mean;
     if (available_pulsations.compute[0]){

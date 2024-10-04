@@ -39,7 +39,6 @@ export function getPlotObj(components, data, t_fit, h_fit, range){
     const min = Math.min(minData, minFit);
     const max = Math.max(maxData, maxFit);
 
-
     var layout = {
         // title: 'Least square fitting',
         xaxis: {title: 't (h)'},
@@ -53,14 +52,14 @@ export function getPlotObj(components, data, t_fit, h_fit, range){
                 yref: 'y',
                 x0: t_fit[range[0]],
                 y0: min - (max - min) * 0.1,
-                x1: t_fit[range[1]],
+                x1: t_fit[range[1]-1],
                 y1: max + (max - min) * 0.1,
                 opacity: 0.1,
                 fillcolor: 'rgb(110, 26, 74)',
             }],
             annotations: [
                 {
-                x: (t_fit[range[0]] + t_fit[range[1]])/2.0,
+                x: (t_fit[range[0]] + t_fit[range[1]-1])/2.0,
                 y: max + (max - min) * 0.15,
                 xref: 'x',
                 yref: 'y',
