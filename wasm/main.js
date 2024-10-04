@@ -214,6 +214,12 @@ function analyze(components, data){
         components.phases[0] = 0.0;
     }
     fillComponentsTable(components.amplitudes, components.phases);
+    let mean = data.mean;
+    if (available_pulsations.compute[0]){
+        mean = 0.0;
+    }
+    const error = components.errorInf(data.t, data.h, mean);
+    console.log(error);
 }
 
 function plotHarmonics(components, data){
@@ -243,6 +249,7 @@ function plotHarmonics(components, data){
 
 
 function main(){
+
     Module.onRuntimeInitialized = async () => {
 
         initComponentsTable(available_pulsations);
@@ -284,9 +291,11 @@ function main(){
 
         const reloadBtn = document.getElementById('reload');
         reloadBtn.addEventListener("click", ()=>{
+            console.profile();
             readData(data);
             analyze(components, data);
             plotHarmonics(components, data);
+            console.profileEnd();
         });
 
         fileInput.onchange = async (e) => {

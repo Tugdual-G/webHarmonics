@@ -39,6 +39,13 @@ export class Components {
                              mean, this.phases.length, heights.byteOffset);
 
     }
+
+    errorInf(times, heights, mean){
+        return Module._errorInf(times.byteOffset, heights.byteOffset, heights.length,
+                        this.pulsations.byteOffset, this.phases.byteOffset,
+                        this.amplitudes.byteOffset, this.pulsations.length,
+                        mean);
+    }
 }
 
 export class Data {
@@ -52,12 +59,12 @@ export class Data {
 
   readData(sep, col_t, col_h, userFormat){
 
-        if (this.t != null){
-            Module._free(this.t.byteOffset);
-        }
-        if (this.h != null){
-            Module._free(this.h.byteOffset);
-        }
+        // if (this.t != null){
+        //     Module._free(this.t.byteOffset);
+        // }
+        // if (this.h != null){
+        //     Module._free(this.h.byteOffset);
+        // }
 
         const t_ptr = createPointerArray(1);
         const h_ptr = createPointerArray(1);
@@ -77,7 +84,7 @@ export class Data {
         }else {
             const units = parseFloat(userFormat);
             console.log(units);
-            n_pts = Module._readDataUnits(txtArray.byteOffset, txtArray.byteLength, units,
+            n_pts = Module._readDataUnits(this.txt.byteOffset, this.txt.byteLength, units,
                                         sep.charCodeAt(0), col_t, col_h, t_ptr.byteOffset, h_ptr.byteOffset,
                                         epoch_ptr.byteOffset);
         }
