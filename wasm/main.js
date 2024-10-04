@@ -4,6 +4,8 @@ import { getPlotObj } from "./plot.js"
 
 main();
 
+const testResultDefault = "---------------  ,  ---------------  , ---------------";
+
 const COMPONENT_SPEEDS = new Map();
 COMPONENT_SPEEDS.set("H0", 0.0);
 COMPONENT_SPEEDS.set("M2", 28.9841042);// Principal lunar semidiurnal degrees/hour
@@ -200,10 +202,6 @@ function readData(data){
 
     const meanDataElement = document.getElementById('mean_data');
     meanDataElement.innerHTML = `\\( \\overline{h_{data}} = ${toScient(data.mean)} ~ m \\)`;
-    typeset(() => {
-    return [meanDataElement];
-    });
-
     const refDate = document.getElementById('ref_date');
     refDate.innerHTML = `dataset reference datetime : ${data.epoch}`;
 
@@ -216,13 +214,6 @@ async function analyze(components, data){
         components.amplitudes[0] = data.mean + components.amplitudes[0]*Math.cos(components.phases[0]);
         components.phases[0] = 0.0;
     }
-
-    let mean = data.mean;
-    if (available_pulsations.compute[0]){
-        mean = 0.0;
-    }
-    const error = components.errorInf(data.t, data.h, mean);
-    console.log(error);
 }
 
 function errorInf(arr0, arr1){
@@ -252,7 +243,14 @@ function test(components, data){
         mean = 0.0;
     }
     components.sumHarmonics(data_test.t, data_test.h, mean);
-
+    const min = data_test.h.reduce(
+        (accumulator, currentValue) => Math.min(accumulator, currentValue), data_test.h[0]);
+    const max = data_test.h.reduce(
+        (accumulator, currentValue) => Math.max(accumulator, currentValue), data_test.h[0]);
+    const range = 0.01 * (max - min);
+    for (let i = 0; i<data_test.h.length; ++i){
+        data_test.h[i] += range * (2 * Math.random() - 1.0);
+    }
     const components_test = new Components();
     components_test.setPulsation(components.pulsations);
     analyze(components_test, data_test);
@@ -265,11 +263,11 @@ function test(components, data){
     const errorAmplitudes = errorInf(components.amplitudes, components_test.amplitudes);
     const errorPhases = errorInf(components.phases, components_test.phases);
 
-    console.log("Amplitudes error : ", errorAmplitudes);
-    console.log("Phases error : ", errorPhases);
 
     Module._free(data_test.h.byteOffset);
     components_test.free();
+
+    return {amplitude:errorAmplitudes, phase:errorPhases};
 }
 
 async function plotHarmonics(components, data){
@@ -297,13 +295,45 @@ async function plotHarmonics(components, data){
 
 }
 
+function getErrors(components, data){
+    let mean = data.mean;
+    if (available_pulsations.compute[0]){
+        mean = 0.0;
+    }
+    const errInf = components.errorInf(data.t, data.h, mean);
+    const errMean = components.errorMean(data.t, data.h, mean);
+    return {inf:errInf, mean:errMean};
+}
+
 function analyzeCycle(components, data){
+    // document.getElementById('testResult').innerHTML = testResultDefault;
     getChosenPulsations();
     components.setPulsation(available_pulsations.comp_puls);
     const range = getRange(data.t);
-    analyze(components, data.subData(range));
+    const subData = data.subData(range);
+    analyze(components, subData);
     fillComponentsTable(components.amplitudes, components.phases);
     plotHarmonics(components, data);
+
+    const errorsDataElem = document.getElementById('errorsWholeData');
+    const errorsRange = document.getElementById('errorsAnalysisRange');
+
+    const errData = getErrors(components, data);
+    const errRange = getErrors(components, subData);
+
+    errorsDataElem.innerHTML =
+        `$ \\|r\\|_{\\infty} = ${toScient(errData.inf)} $ m,
+         $ \\overline{|r_i|} = ${toScient(errData.mean)} $ m `
+
+
+    errorsRange.innerHTML =
+        `$ \\|r_{[t_{min}, t_{max}]}\\|_{\\infty} = ${toScient(errRange.inf)} $ m,
+         $ \\overline{|r_{i[t_{min}, t_{max}]}|} = ${toScient(errRange.mean)} $ m `
+
+    const meanDataElem = document.getElementById('mean_data');
+    typeset(() => {
+        return [meanDataElem, errorsDataElem, errorsRange];
+    });
 }
 
 function main(){
@@ -364,7 +394,24 @@ function main(){
             window.open(textFile, '_blank').focus();
         });
 
-        const range = getRange(data.t);
-        test(components, data.subData(range));
+        // const testBtn = document.getElementById('test');
+        // testBtn.addEventListener("click", ()=>{
+        //     getChosenPulsations();
+        //     components.setPulsation(available_pulsations.comp_puls);
+        //     const range = getRange(data.t);
+        //     const errors = test(components, data.subData(range));
+        //     let mean = data.mean;
+        //     if (available_pulsations.compute[0]){
+        //         mean = 0.0;
+        //     }
+        //     const testElem = document.getElementById('testResult');
+        //     testElem.innerHTML =
+        //         `Ideal signal with noise : $~~~ ||e_{\\theta}||_{\\infty} = ${toScient(errors.phase)} $ rad ,
+        //          $ ||e_{Hf}||_{\\infty} = ${toScient(errors.amplitude)} $ m `
+        //     typeset(() => {
+        //         return [testElem];
+        //     });
+        // });
+
     }
 }

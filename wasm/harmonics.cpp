@@ -127,6 +127,25 @@ EMSCRIPTEN_KEEPALIVE void getHarmonics(const double *times_in,
 }
 
 EMSCRIPTEN_KEEPALIVE auto
+errorMean(const double *times_in, const double *height_int, int n_t,
+          const double *pulsations_in, const double *phases_in,
+          const double *amplitudes_in, int n_puls, double mean_h) -> double {
+
+  std::vector<double> t(times_in, times_in + n_t);
+  std::vector<double> h(height_int, height_int + n_t);
+
+  Components<double> components;
+  components.set_pulsations(pulsations_in, n_puls);
+  components.set_amplitudes(amplitudes_in, n_puls);
+  components.set_phases(phases_in, n_puls);
+
+  for (auto &v : h) {
+    v -= mean_h;
+  }
+  return components.error_mean(t, h);
+}
+
+EMSCRIPTEN_KEEPALIVE auto
 errorInf(const double *times_in, const double *height_int, int n_t,
          const double *pulsations_in, const double *phases_in,
          const double *amplitudes_in, int n_puls, double mean_h) -> double {
@@ -142,6 +161,6 @@ errorInf(const double *times_in, const double *height_int, int n_t,
   for (auto &v : h) {
     v -= mean_h;
   }
-  return components.error_mean(t, h);
+  return components.error_inf(t, h);
 }
 }

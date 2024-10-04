@@ -26,10 +26,19 @@ export function getPlotObj(components, data, t_fit, h_fit, range){
     });
 
 
-    const min = h_fit.reduce(
+    const minFit = h_fit.reduce(
         (accumulator, currentValue) => Math.min(accumulator, currentValue), h_fit[0]);
-    const max = h_fit.reduce(
+    const maxFit = h_fit.reduce(
         (accumulator, currentValue) => Math.max(accumulator, currentValue), h_fit[0]);
+
+    const minData = data.h.reduce(
+        (accumulator, currentValue) => Math.min(accumulator, currentValue), data.h[0]);
+    const maxData = data.h.reduce(
+        (accumulator, currentValue) => Math.max(accumulator, currentValue), data.h[0]);
+
+    const min = Math.min(minData, minFit);
+    const max = Math.max(maxData, maxFit);
+
 
     var layout = {
         // title: 'Least square fitting',

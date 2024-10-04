@@ -135,3 +135,6 @@ nav {
     border-radius: 5px;
     font-family: sans-serif;
 }
+#testResult {
+    width: 75%;
+}

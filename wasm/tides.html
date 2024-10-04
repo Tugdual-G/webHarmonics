@@ -49,6 +49,7 @@
 
     <div id="parsing_param">
       <h4>Data parsing parameters</h4>
+
       <div class="control_options">
         <div class="control">
           datetime format
@@ -87,6 +88,15 @@
       <button id="reload">Parse data</button>
     </div>
 
+    <div class="control_options">
+      <div  class="centeredcontent" id="mean_data">
+        \( \overline{h_{data}} = --- \)
+      </div>
+
+      <div  class="centeredcontent" id="ref_date">
+        dataset reference datetime : ---
+      </div>
+    </div>
 
     <div id="graph"></div>
 
@@ -105,12 +115,11 @@
       </div>
     </div>
 
-    <div  class="centeredcontent" id="mean_data">
-      \( \overline{h_{data}} = --- \)
+
+    <div  class="centeredcontent" id="errorsWholeData">
     </div>
 
-    <div  class="centeredcontent" id="ref_date">
-       dataset reference datetime : ---
+    <div  class="centeredcontent" id="errorsAnalysisRange">
     </div>
 
     <table>
@@ -134,6 +143,11 @@
     <div class="centeredcontent">
       <button id="textFile">Table Text Export</button>
     </div>
+
+    <!-- <div class="control_options">
+         <button id="test"> Test config </button>
+         <div id="testResult"></div>
+         </div> -->
 
 
     <div id="helpDataParse" class="text">

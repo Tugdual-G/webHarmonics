@@ -46,6 +46,14 @@ export class Components {
                         this.amplitudes.byteOffset, this.pulsations.length,
                         mean);
     }
+
+    errorMean(times, heights, mean){
+        return Module._errorMean(times.byteOffset, heights.byteOffset, heights.length,
+                        this.pulsations.byteOffset, this.phases.byteOffset,
+                        this.amplitudes.byteOffset, this.pulsations.length,
+                        mean);
+    }
+
     free(){
         if (this.amplitudes != null){
             Module._free(this.amplitudes.byteOffset);
