@@ -1,25 +1,8 @@
-function typeset(code) {
-  MathJax.startup.promise = MathJax.startup.promise
-    .then(() => MathJax.typesetPromise(code()))
-    .catch((err) => console.log('Typeset failed: ' + err.message));
-  return MathJax.startup.promise;
-}
+import { createF64Array, createCharArray, createPointerArray,
+         cStringLength, stringToChars, Components, Data } from "./harmonicsInterface.js"
+import { getPlotObj } from "./plot.js"
 
-function toScient(x){
-    let str = x.toExponential(3).replace(/e\+?/, ' \\cdot 10^{');
-    str += "}";
-    return str;
-}
-
-let txtArray;
-let t = null;
-let h = null;
-let h_mean = 0.0;
-let epoch = null;
-
-let pulsations = null;
-let amplitudes = null;
-let phases = null;
+main();
 
 const COMPONENT_SPEEDS = new Map();
 COMPONENT_SPEEDS.set("H0", 0.0);
@@ -61,13 +44,31 @@ let available_pulsations = {};
     available_pulsations.compStr = "";
 }
 
-function mean(arr){
-    let mean = 0.0;
-    arr.forEach((x)=> mean += x);
-    return mean / arr.length;
+
+
+function typeset(code) {
+  MathJax.startup.promise = MathJax.startup.promise
+    .then(() => MathJax.typesetPromise(code()))
+    .catch((err) => console.log('Typeset failed: ' + err.message));
+  return MathJax.startup.promise;
 }
 
-function getPulsations(){
+function toScient(x){
+    let str = x.toExponential(3).replace(/e\+?/, ' \\cdot 10^{');
+    str += "}";
+    return str;
+}
+
+
+
+function fetchComponentsSelection(){
+    for (let i=0; i < available_pulsations.names.length; ++i){
+        available_pulsations.compute[i] = document.getElementById(`component${i}`).checked;
+    }
+}
+
+function getChosenPulsations(){
+    fetchComponentsSelection();
     available_pulsations.comp_puls = [];
     for (let i = 0; i<available_pulsations.names.length; ++i){
         if ( available_pulsations.compute[i] == true ){
@@ -76,13 +77,7 @@ function getPulsations(){
     }
 }
 
-function fetchComponentsSelection(){
-    for (let i=0; i < available_pulsations.names.length; ++i){
-        available_pulsations.compute[i] = document.getElementById(`component${i}`).checked;
-    }
-}
-
-function initComponentsTable(){
+function initComponentsTable(available_pulsations){
     let htmlList = "";
     let i_computed = 0;
     for (let i = 0; i< available_pulsations.names.length; ++i){
@@ -186,297 +181,129 @@ function getRange(x){
     return [i_min, i_max];
 }
 
-function cStringLength(cString){
-    let end = 0;
-    while (cString.getUint8(end) !== 0 && end < 500) {
-        end++
-    }
-    return end;
-}
+function readData(data){
 
-function stringtoChar(str){
-    var enc = new TextEncoder(); // always utf-8
-    return enc.encode(str);
-}
+    const sep = document.getElementById("separator").value;
+    const col_t = document.getElementById("col_t").value;
+    const col_h = document.getElementById("col_h").value;
 
-Module.onRuntimeInitialized = async () => {
+    // "%d/%m/%Y %H:%M:%S"
+    let userFormat = document.getElementById("format").value;
+    data.readData(sep, col_t, col_h, userFormat);
 
-
-    const memory = Module.wasmMemory;
-
-    function createF64Array(n){
-        const ptr = Module._malloc(n * 8);
-        return new Float64Array(memory.buffer, ptr, n);
-    }
-
-
-    function createCharArray(txtBytes){
-        const txtPtr = Module._malloc(txtBytes.byteLength + 1);
-        const arr = new Uint8Array(memory.buffer, txtPtr, txtBytes.length + 1);
-        arr.set(txtBytes);
-        arr[arr.length - 1] = '\0';
-        return arr;
-
-    }
-
-    function createPointerArray(n){
-        const ptr = Module._malloc(n * 4);
-        const arr = new Uint32Array(memory.buffer, ptr, n);
-        return arr;
-    }
-
-
-    async function readData(){
-
-        if (t != null){
-            Module._free(t.byteOffset);
-        }
-        if (h != null){
-            Module._free(h.byteOffset);
-        }
-
-        const t_ptr = createPointerArray(1);
-        const h_ptr = createPointerArray(1);
-        const epoch_ptr = createPointerArray(1);
-
-        const sep = document.getElementById("separator").value;
-        const col_t = document.getElementById("col_t").value;
-        const col_h = document.getElementById("col_h").value;
-
-        // "%d/%m/%Y %H:%M:%S"
-        let user_format = document.getElementById("format").value;
-        let n_pts = 0;
-        if (user_format.includes("%") || isNaN(parseFloat(user_format))){
-            if (isNaN(parseFloat(user_format))){
-                user_format = "%d/%m/%Y %H:%M:%S";
-            }
-            const format = createCharArray(stringtoChar(user_format));
-            n_pts = Module._readData(txtArray.byteOffset, txtArray.byteLength, format.byteOffset,
-                                        sep.charCodeAt(0), col_t, col_h, t_ptr.byteOffset, h_ptr.byteOffset,
-                                        epoch_ptr.byteOffset);
-
-        }else {
-            const units = parseFloat(user_format);
-            console.log(units);
-            n_pts = Module._readDataUnits(txtArray.byteOffset, txtArray.byteLength, units,
-                                        sep.charCodeAt(0), col_t, col_h, t_ptr.byteOffset, h_ptr.byteOffset,
-                                        epoch_ptr.byteOffset);
-        }
-
-
-        t = new Float64Array(memory.buffer, t_ptr[0], n_pts);
-        h = new Float64Array(memory.buffer, h_ptr[0], n_pts);
-
-        const epochStrLen = cStringLength(new DataView(memory.buffer, epoch_ptr));
-        const epoch_array = new Uint8Array(memory.buffer, epoch_ptr[0], epochStrLen);
-        epoch = new TextDecoder().decode(epoch_array);
-
-        h_mean = mean(h);
-
-
-        const meanDataElement = document.getElementById('mean_data');
-        meanDataElement.innerHTML = `\\( \\overline{h_{data}} = ${toScient(h_mean)} ~ m \\)`;
-        typeset(() => {
-        return [meanDataElement];
-        });
-
-        const refDate = document.getElementById('ref_date');
-        refDate.innerHTML = `dataset reference datetime : ${epoch}`;
-
-        Module._free(t_ptr.byteOffset);
-        Module._free(h_ptr.byteOffset);
-        Module._free(epoch_ptr.byteOffset);
-        Module._free(epoch_array.byteOffset);
-
-    }
-
-    async function analyse(times, heights){
-        fetchComponentsSelection();
-        getPulsations();
-
-        if (amplitudes != null){
-            Module._free(amplitudes.byteOffset);
-            Module._free(pulsations.byteOffset);
-            Module._free(phases.byteOffset);
-        }
-
-        pulsations = createF64Array(available_pulsations.comp_puls.length);
-        pulsations.set(available_pulsations.comp_puls);
-
-        amplitudes = createF64Array(available_pulsations.comp_puls.length);
-
-        phases = createF64Array(available_pulsations.comp_puls.length);
-
-        Module._getHarmonics(times.byteOffset, heights.byteOffset, times.length, pulsations.byteOffset,
-                            h_mean, phases.byteOffset, amplitudes.byteOffset, pulsations.length);
-
-        if (available_pulsations.compute[0]){
-            amplitudes[0] = h_mean + amplitudes[0]*Math.cos(phases[0]);
-            phases[0] = 0.0;
-        }
-        fillComponentsTable(amplitudes, phases);
-
-    }
-
-    function plotHarmonics(){
-        const t_fit = createF64Array(t.length * 4);
-        const h_fit = createF64Array(t.length * 4);
-        {
-            const dt = (t[t.length - 1] - t[0]) / t_fit.length ;
-            for (let i = 0; i<t_fit.length; ++i){
-                t_fit[i] = i * dt + t[0];
-            }
-        }
-
-        let mean_plot = h_mean;
-        if (available_pulsations.compute[0]){
-            mean_plot = 0.0;
-        }
-        Module._sumHarmonics(t_fit.byteOffset, t_fit.length, pulsations.byteOffset, phases.byteOffset,
-                             amplitudes.byteOffset, mean_plot, phases.length, h_fit.byteOffset);
-
-
-        const plot = [];
-
-        const range = getRange(t_fit);
-        plot.push({
-            x: t,
-            y: h,
-            mode: 'lines+markers',
-            name: 'data',
-            line: {
-                color: 'rgb(107, 107, 107)',
-                width: 0.5,
-            }
-        });
-
-        plot.push({
-            x: t_fit,
-            y: h_fit,
-            mode: 'lines',
-            name: 'fit',
-            line: {
-                color: 'rgb(0, 20, 117)',
-                width: 1.0,
-            }
-        });
-
-
-        const min = h_fit.reduce(
-            (accumulator, currentValue) => Math.min(accumulator, currentValue), h_fit[0]);
-        const max = h_fit.reduce(
-            (accumulator, currentValue) => Math.max(accumulator, currentValue), h_fit[0]);
-
-        var layout = {
-            // title: 'Least square fitting',
-            xaxis: {title: 't (h)'},
-            yaxis: {title: 'h (m)'},
-            legend: {"itemsizing": "constant", "itemwidth": 50},
-            shapes: [
-                {
-                    name: 'Analysis',
-                    type: 'rect',
-                    xref: 'x',
-                    yref: 'y',
-                    x0: t_fit[range[0]],
-                    y0: min - (max - min) * 0.1,
-                    x1: t_fit[range[1]],
-                    y1: max + (max - min) * 0.1,
-                    opacity: 0.1,
-                    fillcolor: 'rgb(110, 26, 74)',
-                }],
-                annotations: [
-                    {
-                    x: (t_fit[range[0]] + t_fit[range[1]])/2.0,
-                    y: max + (max - min) * 0.15,
-                    xref: 'x',
-                    yref: 'y',
-                    text: 'Analysis range',
-                    font: {
-                        family: 'sans serif',
-                        size: 18,
-                        color: 'rgb(110, 26, 74)'
-                    },
-                    color: "red",
-                    showarrow: false,
-                    // arrowhead: 7,
-                    // ax: 0,
-                    // ay: -40
-                    }
-                ],
-        };
-
-
-        Plotly.newPlot( "graph", plot, layout);
-
-
-        Module._free(t_fit.byteOffset);
-        Module._free(h_fit.byteOffset);
-
-    }
-
-
-    initComponentsTable();
-
-    let file;
-    const fileInput = document.getElementById('inselec');
-    // In case the file is cached by the navigation
-    if (typeof fileInput.files[0] == "undefined"){
-        document.getElementById("t_min").value = "none";
-        document.getElementById("t_max").value = "2000";
-        document.getElementById("separator").value = ";";
-        document.getElementById("col_t").value = 0;
-        document.getElementById("col_h").value = 1;
-        // "%d/%m/%Y %H:%M:%S"
-        document.getElementById("format").value = "%d/%m/%Y %H:%M:%S";
-        file = await fetch("test_data.txt");
-        txtArray = createCharArray(await file.bytes());
-    } else {
-        file = fileInput.files[0];
-        txtArray = createCharArray(await file.bytes());
-    }
-
-
-
-    readData();
-    const range = getRange(t);
-    analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
-    plotHarmonics();
-
-    const compBtn = document.getElementById('compBtn');
-    compBtn.addEventListener("click", ()=>{
-        const range = getRange(t);
-        analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
-        plotHarmonics();
+    const meanDataElement = document.getElementById('mean_data');
+    meanDataElement.innerHTML = `\\( \\overline{h_{data}} = ${toScient(data.mean)} ~ m \\)`;
+    typeset(() => {
+    return [meanDataElement];
     });
 
-    const reloadBtn = document.getElementById('reload');
-    reloadBtn.addEventListener("click", ()=>{
-        readData();
-        const range = getRange(t);
-        analyse(t.subarray(range[0], range[1]), h.subarray(range[0], range[1]));
-        plotHarmonics();
-    });
-
-    fileInput.onchange = async (e) => {
-        file = e.target.files[0];
-        Module._free(txtArray.byteOffset);
-        txtArray = createCharArray(await file.bytes());
-    }
-
-
-
-    let textFile = null;
-    document.getElementById('textFile').addEventListener("click", ()=>{
-        fillComponentsString(amplitudes, phases);
-        const comptxt = new Blob([available_pulsations.compStr], {type: 'text/plain'});
-        if (textFile !== null) {
-            window.URL.revokeObjectURL(textFile);
-        }
-        textFile = window.URL.createObjectURL(comptxt);
-        window.open(textFile, '_blank').focus();
-    });
-
+    const refDate = document.getElementById('ref_date');
+    refDate.innerHTML = `dataset reference datetime : ${data.epoch}`;
 
 }
 
+function analyze(components, data){
+    getChosenPulsations();
+    components.setPulsation(available_pulsations.comp_puls);
+    const range = getRange(data.t);
+
+    components.analyze(data.t.subarray(range[0], range[1]), data.h.subarray(range[0], range[1]), data.mean);
+
+    if (available_pulsations.compute[0]){
+        components.amplitudes[0] = data.mean + components.amplitudes[0]*Math.cos(components.phases[0]);
+        components.phases[0] = 0.0;
+    }
+    fillComponentsTable(components.amplitudes, components.phases);
+}
+
+function plotHarmonics(components, data){
+    const t_fit = createF64Array(data.t.length * 2);
+    const h_fit = createF64Array(data.t.length * 2);
+    {
+        const dt = (data.t[data.t.length - 1] - data.t[0]) / t_fit.length ;
+        for (let i = 0; i<t_fit.length; ++i){
+            t_fit[i] = i * dt + data.t[0];
+        }
+    }
+
+    let mean_plot = data.mean;
+    if (available_pulsations.compute[0]){
+        mean_plot = 0.0;
+    }
+
+    components.sumHarmonics(t_fit, h_fit, mean_plot);
+    const range = getRange(t_fit);
+
+    const plotOb = getPlotObj(components, data, t_fit, h_fit, range);
+    Plotly.newPlot( "graph", plotOb.plot, plotOb.layout);
+    Module._free(t_fit.byteOffset);
+    Module._free(h_fit.byteOffset);
+
+}
+
+
+function main(){
+    Module.onRuntimeInitialized = async () => {
+
+        initComponentsTable(available_pulsations);
+
+        const data = new Data();
+
+        let file;
+        const fileInput = document.getElementById('inselec');
+        // In case the file is cached by the navigation
+        if (typeof fileInput.files[0] == "undefined"){
+            document.getElementById("t_min").value = "none";
+            document.getElementById("t_max").value = "2000";
+            document.getElementById("separator").value = ";";
+            document.getElementById("col_t").value = 0;
+            document.getElementById("col_h").value = 1;
+            // "%d/%m/%Y %H:%M:%S"
+            document.getElementById("format").value = "%d/%m/%Y %H:%M:%S";
+            file = await fetch("test_data.txt");
+            data.txt = createCharArray(await file.bytes());
+        } else {
+            file = fileInput.files[0];
+            data.txt = createCharArray(await file.bytes());
+        }
+
+
+
+        readData(data);
+        const components = new Components();
+        analyze(components, data);
+        fillComponentsTable(components.amplitudes, components.phases);
+
+        plotHarmonics(components, data);
+
+        const compBtn = document.getElementById('compBtn');
+        compBtn.addEventListener("click", ()=>{
+            analyze(components, data);
+            plotHarmonics(components, data);
+        });
+
+        const reloadBtn = document.getElementById('reload');
+        reloadBtn.addEventListener("click", ()=>{
+            readData(data);
+            analyze(components, data);
+            plotHarmonics(components, data);
+        });
+
+        fileInput.onchange = async (e) => {
+            file = e.target.files[0];
+            Module._free(data.txt.byteOffset);
+            data.txt = createCharArray(await file.bytes());
+        }
+
+        let textFile = null;
+        document.getElementById('textFile').addEventListener("click", ()=>{
+            fillComponentsString(amplitudes, phases);
+            const comptxt = new Blob([available_pulsations.compStr], {type: 'text/plain'});
+            if (textFile !== null) {
+                window.URL.revokeObjectURL(textFile);
+            }
+            textFile = window.URL.createObjectURL(comptxt);
+            window.open(textFile, '_blank').focus();
+        });
+    }
+}
