@@ -138,9 +138,10 @@ function fillComponentsTable(ampls, phases){
     document.getElementById('components').innerHTML = htmlList;
 }
 
-function fillComponentsString(ampls, phases){
+function fillComponentsString(ampls, phases, epoch, filename){
     available_pulsations.compStr = "#";
-    available_pulsations.compStr += "t=0 reference datetime ";
+    available_pulsations.compStr += `from file:${filename}\n`;
+    available_pulsations.compStr += "#t=0 reference datetime ";
     available_pulsations.compStr += epoch + "\n";
     available_pulsations.compStr += "#name pulsation(rad/h) amplitude(m) phase(rad)\n";
     let i_computed = 0;
@@ -190,12 +191,17 @@ function getRange(x){
 function readData(data){
 
     const sep = document.getElementById("separator").value;
-    const col_t = document.getElementById("col_t").value;
-    const col_h = document.getElementById("col_h").value;
-
+    const col_t = parseInt(document.getElementById("col_t").value);
+    const col_h = parseInt(document.getElementById("col_h").value);
+    const hUnits = parseFloat(document.getElementById("hUnits").value);
     // "%d/%m/%Y %H:%M:%S"
     let userFormat = document.getElementById("format").value;
+
     data.readData(sep, col_t, col_h, userFormat);
+
+    for (let i = 0; i< data.h.length; ++i){
+        data.h[i] *= hUnits;
+    }
 
     const meanDataElement = document.getElementById('mean_data');
     meanDataElement.innerHTML = `\\( \\overline{h_{data}} = ${toScient(data.mean)} ~ m \\)`;
@@ -326,6 +332,7 @@ function analyzeCycle(components, data){
     typeset(() => {
         return [meanDataElem, errorsDataElem, errorsRange];
     });
+    document.getElementById('textFileLink').innerHTML = "";
 }
 
 function main(){
@@ -334,10 +341,11 @@ function main(){
 
         initComponentsTable(available_pulsations);
 
-        const data = new Data();
 
         let file;
         const fileInput = document.getElementById('inselec');
+        const data = new Data();
+
         // In case the file is cached by the navigation
         if (typeof fileInput.files[0] == "undefined"){
             document.getElementById("t_min").value = "none";
@@ -347,13 +355,14 @@ function main(){
             document.getElementById("col_h").value = 1;
             // "%d/%m/%Y %H:%M:%S"
             document.getElementById("format").value = "%d/%m/%Y %H:%M:%S";
+            data.fname = "test_data.txt";
             file = await fetch("test_data.txt");
-            data.txt = createCharArray(await file.bytes());
         } else {
             file = fileInput.files[0];
-            data.txt = createCharArray(await file.bytes());
+            data.fname = fileInput.files[0].name;
         }
 
+        data.txt = createCharArray(await file.bytes());
         readData(data);
         const components = new Components();
         analyzeCycle(components, data);
@@ -377,13 +386,17 @@ function main(){
 
         let textFile = null;
         document.getElementById('textFile').addEventListener("click", ()=>{
-            fillComponentsString(amplitudes, phases);
+            fillComponentsString(components.amplitudes, components.phases, data.epoch, data.fname);
             const comptxt = new Blob([available_pulsations.compStr], {type: 'text/plain'});
             if (textFile !== null) {
                 window.URL.revokeObjectURL(textFile);
             }
             textFile = window.URL.createObjectURL(comptxt);
-            window.open(textFile, '_blank').focus();
+
+            document.getElementById('textFileLink').href = textFile;
+            document.getElementById('textFileLink').innerHTML = "components.txt";
+            document.getElementById('textFileLink').download = "components.txt";
+            // window.open(textFile, '_blank').focus();
         });
 
         // const testBtn = document.getElementById('test');

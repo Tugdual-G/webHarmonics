@@ -74,6 +74,7 @@ export class Data {
         this.epoch = null;
         this.txt = null;
         this.mean = 0.0;
+        this.fname = "";
     }
 
     subData(range){

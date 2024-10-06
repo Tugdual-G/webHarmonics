@@ -63,7 +63,9 @@
           <datalist id="format_list">
             <option value="%d/%m/%Y %H:%M:%S"></option>
             <option value="%Y-%m-%dT%H:%M:%SZ"></option>
+            <option value="%m/%d/%Y %H:%M:%S"></option>
             <option value="3600.0"></option>
+            <option value="60.0"></option>
           </datalist>
 
         </div>
@@ -80,6 +82,11 @@
           separator
           <input id="separator" class="separator" type="text" value=";" minlength="1" maxlength="1"/>
         </div>
+        <div class="control">
+          height units
+          <input id="hUnits" type="number" value="1.0" min="0.0" step="0.1" style="text-align:center;"/><span style="margin-left:10px;">m</span>
+        </div>
+
       </div>
       <a href="#helpDataParse" class="help"> Help </a>
     </div>
@@ -142,6 +149,7 @@
     </table>
     <div class="centeredcontent">
       <button id="textFile">Table Text Export</button>
+      <a id="textFileLink" target="_blank" href="" ></a>
     </div>
 
     <!-- <div class="control_options">

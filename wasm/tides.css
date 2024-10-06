@@ -67,20 +67,24 @@ button {
 }
 
 label {
-    margin-right: 5px;
-    margin-left: 20px;
+    /* margin-right: 5px; */
+    /* margin-left: 20px; */
 }
 
 .range {
-    width:50px;
+    width:40px;
+    margin-right:10px;
 }
 
 #separator {
     width: 20px;
 }
+
 .control_options {
     display: flex;
     justify-content: space-around;
+    /* align-items: center; */
+    align-content: center;
     margin-top: 10px;
     margin-bottom: 10px;
 }
@@ -92,10 +96,14 @@ label {
     text-align: center;
 }
 
-/* .control { */
-/*     /\* border: 1px solid grey; *\/ */
-/*     padding: 0px 0px; */
-/* } */
+.control {
+    /* border: 1px solid grey; */
+    /* margin-top:auto; */
+    /* margin-bottom:auto; */
+    font-size: 20px;
+    text-align: center;
+    /* padding: 0px 0px; */
+}
 
 .text {
     width: 75%;
@@ -124,10 +132,6 @@ nav {
     display: flex;
     justify-content: space-between;
 }
-#separator{
-    text-align: center;
-    font-size: 26px;
-}
 
 .help {
     padding: 5px;
@@ -135,6 +139,11 @@ nav {
     border-radius: 5px;
     font-family: sans-serif;
 }
+
 #testResult {
     width: 75%;
+}
+
+#hUnits {
+    width:25%;
 }
